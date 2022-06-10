@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="PublishConfigData" autoUpload="Always" deleteMissingItems="true" createEmptyFolders="true" preserveFilePermissions="true" autoUploadExternalChanges="true">
+    <serverData>
+      <paths name="ubuntu desktop (f3837735-f0e5-4725-8e6b-6619c42779cf)">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/root/projects/clion/virtualLan" local="$PROJECT_DIR$" />
+          </mappings>
+          <excludedPaths>
+            <excludedPath local="true" path="$PROJECT_DIR$/cmake-build-debug" />
+            <excludedPath local="true" path="$PROJECT_DIR$/src/core/cmake-build-debug" />
+            <excludedPath local="true" path="$PROJECT_DIR$/cmake-build-debug-ubuntu-desktop" />
+          </excludedPaths>
+        </serverdata>
+      </paths>
+      <paths name="ubuntu server (690882ad-5488-408c-8f9e-c3beeccea4c6)">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/root/projects/clion/virtualLan" local="$PROJECT_DIR$" />
+          </mappings>
+          <excludedPaths>
+            <excludedPath local="true" path="$PROJECT_DIR$/cmake-build-debug-ubuntu-server" />
+          </excludedPaths>
+        </serverdata>
+      </paths>
+    </serverData>
+    <option name="myAutoUpload" value="ALWAYS" />
+  </component>
+</project>

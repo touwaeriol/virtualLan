@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+
+package vl.core;
+
+
+
+/**
+ * 虚拟设备基础信息 客户端id， mac 地址 和 ip 组成
+ */
+message Device{
+
+  string clientId = 1;
+
+  string mac = 2;
+
+  uint32 mtu = 3;
+
+  string ip = 4;
+
+  uint32 ipNetmask = 5;
+
+  string ipv6 = 6;
+
+  uint32 prefixLength = 7;
+
+  string publicIp = 8;
+
+  string publicIpv6 = 9;
+
+  // 客户端所属分组
+  string group = 10;
+}

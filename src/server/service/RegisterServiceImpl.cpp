@@ -28,8 +28,8 @@ namespace vl::server {
     grpc::Status
     RegisterServiceImpl::registe(::grpc::ServerContext *context, const ::vl::core::RegisterRequest *request,
                                  ::vl::core::RegisterResponse *response) {
+        MutexGuard autoLock(this->_mutex);
         //上锁
-        core::AutoReleaseMutex<std::mutex> m(&_mutex);
 
         auto requestId = request->status().requestid();
         auto clientId = request->status().clientid();
@@ -45,7 +45,7 @@ namespace vl::server {
 
         auto device = _manager.allocDevice();
 
-        auto deviceCopy = unique_ptr<Device>();
+        auto deviceCopy = make_unique<Device>();
         deviceCopy->CopyFrom(*device);
         deviceCopy->set_clientid(clientId);
         deviceCopy->set_group("default");

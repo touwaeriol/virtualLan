@@ -7,9 +7,13 @@
 
 #include <vl/core.h>
 
-namespace vl::client {
+#include "Client.h"
 
+
+namespace vl::client {
     class Client;
+
+    class TapDataHandler;
 }
 
 
@@ -20,8 +24,11 @@ namespace vl::client {
 
 
     class Client : public Uncopymovable {
+        friend class TapDataHandler;
+
 
     public:
+
         Client(const string &serverHost, int serverPort, int udpPort);
 
         ~Client() override = default;
@@ -31,13 +38,18 @@ namespace vl::client {
     public:
         void init();
 
-        std::pair<bool,string> start();
+        std::pair<bool, string> start();
 
         void wait();
 
 
     private:
         std::unique_ptr<RequestCode> newRequestCode();
+
+        void dataLoop();
+
+
+        void onReceiveData(vector<Byte> &data);
 
 
     private:
@@ -62,7 +74,16 @@ namespace vl::client {
         vl::core::Tap _tap;
 
         std::vector<Byte> _buf;
+
+        unique_ptr<Thread> _dataReader;
+
+        unique_ptr<Thread> _dataHandler;
+
+        moodycamel::BlockingConcurrentQueue<vector<Byte>> _dataQueue;
+
     };
+
+
 }
 
 

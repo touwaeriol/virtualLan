@@ -23,6 +23,7 @@ include(libtuntap)
 include(hiredis)
 include(cocoyaxi)
 include(stduuid)
+include(concurrentqueue)
 
 SET(LIBS
         ${GRPCPP_LIB_NAME}
@@ -30,6 +31,7 @@ SET(LIBS
         ${HIREDIS_LIB_NAME}
         ${COCOYAXI_LIB_NAME}
         ${STDUUID_LIB_NAME}
+        ${CONCURRENTQUEUE_LIB_NAME}
         )
 SET(INCLUDES
         ${GRPCPP_LIB_INCLUDE}
@@ -37,6 +39,7 @@ SET(INCLUDES
         ${COCOYAXI_LIB_INCLUDE}
         ${STDUUID_LIB_INCLUDE}
         ${LIBTUNTAP_LIB_INCLUDE}
+        ${CONCURRENTQUEUE_LIB_INCLUDE}
         )
 target_link_libraries(${TARGET_NAME} ${LIBS})
 target_include_directories(${TARGET_NAME}

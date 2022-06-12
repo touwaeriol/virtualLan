@@ -6,8 +6,8 @@
 #include <vl/core.h>
 #include <tuntap++.hh>
 
-#include "test.hpp"
 #include "Client.h"
+#include "test.hpp"
 
 
 using namespace vl::client;
@@ -41,8 +41,7 @@ DEF_main(argc, argv) {
 
     auto r = client.start();
     if (!r.first) {
-        ELOG << "获取设备信息失败！！！ message = " + r.second;
-        return -1;
+        FLOG << "获取设备信息失败！！！ message = " + r.second;
     }
 
     client.wait();

@@ -31,7 +31,7 @@ namespace test {
 
 
 DEF_main(argc, argv) {
-//    log::set_single_write_cb(vl::core::console_log_writer);
+    log::set_single_write_cb(vl::core::console_log_writer);
 
     unitest::run_all_tests();
 

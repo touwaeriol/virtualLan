@@ -3,6 +3,7 @@
 //
 
 #include "Client.h"
+#include "TapDataHandler.h"
 
 namespace vl::client {
 
@@ -31,6 +32,8 @@ namespace vl::client {
         _register_stub = make_shared<RegisterService::Stub>(_channel);
         DLOG << "初始化同步";
         _syncEvent.reset();
+        DLOG << "初始化数据队列";
+        _dataQueue = moodycamel::BlockingConcurrentQueue<vector<Byte>>(1024);
     }
 
     pair<bool, string> Client::start() {
@@ -52,8 +55,11 @@ namespace vl::client {
         _tap.mtu(static_cast<int >(_device.mtu()));
         _tap.up();
         DLOG << "buf初始化";
-        _buf.reserve(_tap.mtu());
-        _buf.resize(_tap.mtu());
+        _buf.reserve(_device.mtu());
+        _buf.resize(_device.mtu());
+        DLOG << "开始转发tap设备";
+        dataLoop();
+        DLOG << "完成";
         return {true, ""};
     }
 
@@ -69,5 +75,45 @@ namespace vl::client {
         return status;
     }
 
+    void Client::dataLoop() {
+        //专门的读取数据线程
+        _dataReader = make_unique<Thread>([this]() -> void {
+            size_t len;
+            while (true) {
+                len = this->_tap.read(this->_buf.data(), this->_buf.size());
+                if (len == -1) {
+                    auto errorCode = errno;
+                    auto errorMessage = strerror(errorCode);
+                    FLOG << "tap设备异常，socket发生错误 : error = " << errorCode << ", message = " << errorMessage;
+                } else if (len == 0) {
+                    FLOG << "tap 设备 EOF";
+                } else {
+                    auto data = vector<Byte>(len);
+                    memcpy(data.data(), this->_buf.data(), len);
+                    auto ok = _dataQueue.try_enqueue(std::move(data));
+                    if (!ok) {
+                        DLOG << "数据处理失败,丢失该数据 len = " << len;
+                    }
+                }
+            }
+        });
+        _dataHandler = make_unique<Thread>([this]() -> void {
+            while (true){
+                auto data = vector<Byte>();
+                _dataQueue.wait_dequeue(data);
+                TapDataHandler handler(*this, move(data));
+                co::go<TapDataHandler>(std::move(handler));
+            }
+        });
+    }
+
+    void Client::onReceiveData(vector<Byte> & data) {
+
+    }
+
 
 }
+
+
+
+

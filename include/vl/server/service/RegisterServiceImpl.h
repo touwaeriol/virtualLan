@@ -26,7 +26,7 @@ namespace vl::server{
                               ::vl::core::RegisterResponse *response) override;
 
     private:
-        std::mutex _mutex;
+        Mutex _mutex;
 
         EthernetAddressManager _manager;
 

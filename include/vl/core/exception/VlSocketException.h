@@ -24,10 +24,11 @@ namespace vl::core{
 
 
     private:
+
+
         int errorCode;
 
         std::string  errorMessage;
-
 
         std::string message;
 

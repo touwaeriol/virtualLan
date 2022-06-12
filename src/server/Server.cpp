@@ -9,6 +9,7 @@ vl::server::Server::Server(const string &listenHost, int listenPort, const pair<
 
 
 void vl::server::Server::init() {
+    DLOG << "初始化服务器";
     _register = make_shared<RegisterServiceImpl>(_ipRange.first, _ipRange.second, _netmask);
 
     _builder.RegisterService(_register.get());
@@ -18,6 +19,7 @@ void vl::server::Server::init() {
 }
 
 pair<bool, string> vl::server::Server::start() {
+    DLOG << "启动服务器";
     _grpcServer = _builder.BuildAndStart();
     return {true, ""};
 }

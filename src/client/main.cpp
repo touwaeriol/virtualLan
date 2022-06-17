@@ -4,7 +4,6 @@
 
 
 #include <vl/core.h>
-#include <tuntap++.hh>
 
 #include "Client.h"
 #include "test.hpp"
@@ -12,31 +11,27 @@
 
 using namespace vl::client;
 using namespace vl::core;
-using namespace tuntap;
 
-void t_console_log_writer(const void *ptr, size_t len) {
-    std::cout.write(static_cast<const char *>(ptr), len) << std::endl;
 
-}
 
 DEF_main(argc, argv) {
     // 设置co日志输出;
-    log::set_single_write_cb(t_console_log_writer);
+    log::set_single_write_cb(console_log_writer);
 
     DLOG << "运行测试用例";
     unitest::run_all_tests();
 
-
     DLOG << "初始化参数";
     std::string serverHost = "127.0.0.1";
-    int serverPort = 8888;
-    int clientPort = 8888;
-    int mtu = 1476;
+    int serverPort = 5200;
+    int udpPort = 5201;
+    int dataQueueCap = 1024;
     std::string tapName = "vl-adapter0";
 
 
     DLOG << "创建客户端";
-    Client client("localhost", 5200, 5200);
+    Client client(serverHost, serverPort, udpPort,1024,tapName);
+
     client.init();
 
     auto r = client.start();
@@ -45,6 +40,8 @@ DEF_main(argc, argv) {
     }
 
     client.wait();
+
+
     return 0;
 }
 

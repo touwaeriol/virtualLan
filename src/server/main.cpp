@@ -20,14 +20,12 @@ namespace test {
         DEF_case(device)
         {
             vl::server::EthernetAddressManager e(std::pair<string, string>("192.168.101.1", "192.169.101.254"));
-            const shared_ptr <Device> &device = e.allocDevice();
+            const shared_ptr<Device> &device = e.allocDevice();
             std::cout << device->ip() << std::endl;
             std::cout << device->mac() << std::endl;
         }
     }
 } // namespace test
-
-
 
 
 DEF_main(argc, argv) {
@@ -36,13 +34,22 @@ DEF_main(argc, argv) {
     unitest::run_all_tests();
 
 
-    vl::server::Server server{"0.0.0.0", 5200, pair<string, string>("192.168.100.1", "192.168.100.254"), 24};
+    auto listenHost = "0.0.0.0";
+    auto listenPort = 5200;
+    auto ipRange = pair<string, string>("192.168.100.1", "192.168.100.254");
+    auto netmask = 24;
+    vl::server::Server server{listenHost, listenPort, ipRange, netmask};
 
     server.init();
 
     server.start();
 
     server.wait();
+
+
+
+
+
 
     return 0;
 

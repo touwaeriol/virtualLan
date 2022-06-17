@@ -13,7 +13,6 @@
 namespace vl::client {
     class Client;
 
-    class TapDataHandler;
 }
 
 
@@ -24,14 +23,14 @@ namespace vl::client {
 
 
     class Client : public Uncopymovable {
-        friend class TapDataHandler;
 
 
     public:
 
-        Client(const string &serverHost, int serverPort, int udpPort);
+        Client(const string &serverHost, int serverPort, int udpPort, size_t dataQueueCap = 1024,
+               const string &tapName = "vl-adapter0");
 
-        ~Client() override = default;
+        ~Client() override;
 
         void operator()();
 
@@ -42,14 +41,16 @@ namespace vl::client {
 
         void wait();
 
+    public:
+        void setTapName(const string &tapName);
 
     private:
         std::unique_ptr<RequestCode> newRequestCode();
 
-        void dataLoop();
+        void loopUdpData();
 
 
-        void onReceiveData(vector<Byte> &data);
+        void onReceiveData(const vector<Byte> &data);
 
 
     private:
@@ -73,13 +74,20 @@ namespace vl::client {
 
         vl::core::Tap _tap;
 
-        std::vector<Byte> _buf;
+        std::string _tapName;
+
+        moodycamel::ReaderWriterQueue<std::unique_ptr<vector<Byte>> _buf;
 
         unique_ptr<Thread> _dataReader;
 
         unique_ptr<Thread> _dataHandler;
 
-        moodycamel::BlockingConcurrentQueue<vector<Byte>> _dataQueue;
+        moodycamel::BlockingReaderWriterCircularBuffer<std::unique_ptr<vector < Byte>>>
+        _dataQueue;
+
+        sock_t _sock;
+        sockaddr_in _serverAddr;
+        sockaddr_in _localAddr;
 
     };
 

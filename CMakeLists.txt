@@ -21,6 +21,9 @@ message("CMAKE_RUNTIME_OUTPUT_DIRECTORY: " ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 set(CMAKE_MODULE_PATH ;${PROJECT_PATH}/cmake)
 message("CMAKE_MODULE_PATH: " ${CMAKE_MODULE_PATH})
 
+#设置调试参数以识别std::string类型
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -D_GLIBCXX_DEBUG")
+
 #添加子层级
 add_subdirectory(src)
 

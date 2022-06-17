@@ -9,6 +9,8 @@
 #include <array>
 #include <string.h>
 
+#include "util/typeDefile.h"
+
 #define IPV4_LEN 4
 #define IPV6_LEN 16
 #define MAC_LEN 6
@@ -24,12 +26,14 @@ using namespace std;
 namespace vl::core {
 
 
-    typedef unsigned char Byte;
-
-
     template<size_t LEN>
     class AddressHasher;
 
+    template<typename T>
+    class AddressEquals;
+
+    template<typename T>
+    bool addressEquals(const T &v1, const T &v2);
 
     template<int T> using BYTE_ARRAY = array<Byte, T>;
 
@@ -52,10 +56,18 @@ namespace vl::core {
 
 
     template<typename T>
-    bool addressEquals(T v1, T v2) {
+    class AddressEquals{
+    public:
+        bool operator()(const T &v1, const T &v2) const{
+            return addressEquals<T>(v1, v2);
+        }
+    };
+
+
+    template<typename T>
+    bool addressEquals(const T &v1, const T &v2) {
         return memcmp(&v1[0], &v2[0], v1.size()) == 0;
     }
-
 
 }
 

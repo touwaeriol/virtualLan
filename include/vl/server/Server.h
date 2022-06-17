@@ -11,8 +11,6 @@
 #include <string>
 #include <memory>
 
-#include <vl/core/util/Uncopymovable.hpp>
-#include <c++/9/bits/stl_pair.h>
 
 #include "service/RegisterServiceImpl.h"
 
@@ -31,7 +29,8 @@ namespace vl::server {
 
         Server() = default;
 
-        Server(const string &listenHost, int listenPort, const pair<string, string> &ipRange, int netmask);
+        Server(const string &listenHost, int listenPort, const pair<string, string> &ipRange, int netmask,
+               size_t dataQueueCap = 1024, int mtu = VL_TAP_MAX_MTU);
 
 
         ~Server() override = default;
@@ -46,13 +45,18 @@ namespace vl::server {
 
     public:
 
-        void setListenHost(const string &listenHost);
+        void setListenHost(const string &listenHost = "0.0.0.0");
 
         void setListenPort(int listenPort);
 
         void setIpRange(const pair<string, string> &ipRange);
 
         void setNetmask(int netmask);
+
+    private:
+        void initUdpSocket();
+
+        void loopUdpData();
 
     private:
         string _listenHost;
@@ -63,13 +67,26 @@ namespace vl::server {
 
         int _netmask;
 
+        int _mtu;
+
         grpc::ServerBuilder _builder;
 
-        shared_ptr <grpc::Server> _grpcServer;
+        shared_ptr<grpc::Server> _grpcServer;
 
-        shared_ptr <RegisterServiceImpl> _register;
+        shared_ptr<RegisterServiceImpl> _register;
+
+        vector<Byte> _buf;
+
+        sock_t _udpSock;
+
+        sockaddr_in _addr;
+
+        moodycamel::BlockingReaderWriterCircularBuffer<std::unique_ptr<vector<Byte>>> _dataQueue;
+
+        std::unique_ptr<Thread> _dataHandler;
 
 
+        void onReceiveData( vector<Byte> &data);
     };
 }
 

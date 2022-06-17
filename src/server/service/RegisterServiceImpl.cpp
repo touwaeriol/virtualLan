@@ -3,7 +3,6 @@
 //
 
 #include <vl/core.h>
-#include <vl/core/util/AutoReleaseMutex.h>
 
 
 #include "service/RegisterServiceImpl.h"
@@ -28,8 +27,6 @@ namespace vl::server {
     grpc::Status
     RegisterServiceImpl::registe(::grpc::ServerContext *context, const ::vl::core::RegisterRequest *request,
                                  ::vl::core::RegisterResponse *response) {
-        MutexGuard autoLock(this->_mutex);
-        //上锁
 
         auto requestId = request->status().requestid();
         auto clientId = request->status().clientid();
@@ -43,12 +40,18 @@ namespace vl::server {
         status->set_requestid(requestId);
         status->set_allocated_message(new std::string("ok"));
 
+
+
         auto device = _manager.allocDevice();
 
         auto deviceCopy = make_unique<Device>();
         deviceCopy->CopyFrom(*device);
         deviceCopy->set_clientid(clientId);
+        deviceCopy->set_publicip(str::split(context->peer().c_str(),':')[1].c_str());
         deviceCopy->set_group("default");
+
+
+
 
         response->set_allocated_status(status.release());
         response->set_allocated_device(deviceCopy.release());

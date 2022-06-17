@@ -5,17 +5,22 @@
 #ifndef VIRTUALLAN_FRAME_H
 #define VIRTUALLAN_FRAME_H
 
+#include <vector>
 #include <array>
 
+#include "util/typeDefile.h"
+
+
 namespace vl::core {
-    template<int MTU>
     class Frame;
 }
 
 
 namespace vl::core {
+    using namespace std;
+
     enum FrameType {
-        ETHERNET_V2, //Ethernet II
+        ETHERNET_V2, // Ethernet II
         ETHERNET_202_2, // Ethernet Ethernet 802.3/202.2
         ETHERNET_NOVELL, // Ethernet Novell Ethernet
         ETHERNET_SNAP, // Ethernet SNAP
@@ -23,26 +28,19 @@ namespace vl::core {
     };
 
 
-    template<int MTU>
     class Frame {
 
+    public:
+        static FrameType frameType(const vector <Byte> &content);
 
     public:
-        static FrameType frameType(const Frame<MTU> &&frame);
+        virtual pair<const Byte *, size_t> src() = 0;
 
-    public:
-        virtual const char *src() = 0;
+        virtual pair<const Byte *, size_t> dest() = 0;
 
-        virtual const char *dest() = 0;
+        virtual array<Byte, 2> lengthOrType() = 0;
 
-        virtual uint8_t lengthOrType() = 0;
-
-        virtual std::pair<const char *, uint8_t> data() = 0;
-
-        virtual const char *fcs() = 0;
-
-    protected:
-        std::array<char, MTU> _content;
+        virtual pair<const Byte *, size_t> data() = 0;
 
     };
 

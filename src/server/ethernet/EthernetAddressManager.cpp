@@ -2,8 +2,7 @@
 // Created by touwaerio on 2022/5/27.
 //
 
-#include <co/random.h>
-#include <co/str.h>
+#include <vl/core.h>
 
 #include "ethernet/EthernetAddressManager.h"
 #include "exception/AddressAlreadyInUseException.h"
@@ -39,25 +38,28 @@ vl::server::EthernetAddressManager::EthernetAddressManager(
     this->_ipRange.second = ipStrToAddr(ipRange.second);
 }
 
-std::shared_ptr<Device> vl::server::EthernetAddressManager::allocDevice(){
+std::shared_ptr<Device> vl::server::EthernetAddressManager::allocDevice() {
+    //加锁
+    MutexGuard guard{_mutex};
+
     auto device = std::make_shared<Device>();
     device->set_ip(ipAddrToStr(allocIp()));
     device->set_mac(macAddrToStr(allocMac()));
-    device->set_mtu(1472);
+    device->set_mtu(VL_TAP_MAX_MTU);
     device->set_ipnetmask(24);
 
-    _macDeviceMap.emplace(macStrToAddr(device->mac()), device);
+    _macDeviceMap.emplace(macStrToAddr(device->mac()),device);
     return device;
 }
 
-bool vl::server::EthernetAddressManager::macInUse(vl::core::MAC_ADDRESS addr)  const{
+bool vl::server::EthernetAddressManager::macInUse(vl::core::MAC_ADDRESS addr) const {
     auto it = this->_allocedMac.find(addr);
     auto end = this->_allocedMac.cend();
     if (it == end) {
         return false;
     } else {
         for (; it != end; ++it) {
-            if (vl::core::addressEquals<MAC_ADDRESS>(addr, *it)) {
+            if (addressEquals<MAC_ADDRESS>(addr, *it)) {
                 return true;
             }
         }
@@ -239,7 +241,7 @@ std::string vl::server::EthernetAddressManager::ipv6AddrToStr(IPV6_ADDRESS add) 
 MAC_ADDRESS EthernetAddressManager::macStrToAddr(std::string add) {
     MAC_ADDRESS r;
     auto sp = str::split(add, ':');
-    for (int i = 0; i < MAC_LEN ; i++) {
+    for (int i = 0; i < MAC_LEN; i++) {
         auto s = sp[i];
         if (s.size() > 1) {
             r[i] += strHexToByte(s[0]) * 16 + strHexToByte(s[1]);
@@ -286,7 +288,7 @@ std::string EthernetAddressManager::macAddrToStr(MAC_ADDRESS add) {
 }
 
 
-IPV4_ADDRESS EthernetAddressManager::nextIp()  const{
+IPV4_ADDRESS EthernetAddressManager::nextIp() const {
     auto s = _ipRange.first;
     auto e = _ipRange.second;
     IPV4_ADDRESS nIp;
@@ -307,12 +309,13 @@ IPV4_ADDRESS EthernetAddressManager::nextIp()  const{
     return nIp;
 }
 
-MAC_ADDRESS EthernetAddressManager::nextMac()  const{
+MAC_ADDRESS EthernetAddressManager::nextMac() const {
     MAC_ADDRESS r;
     Random rand;
     do {
         uint32 randInt = rand.next();
-        r[0] = static_cast<Byte>(randInt);
+        // 第一个字节的最后一位必须是0 表示单播地址
+        r[0] = static_cast<Byte>(randInt) & 0b11111110;
         r[1] = static_cast<Byte>(randInt >> 8);
         r[2] = static_cast<Byte>(randInt >> 16);
         r[3] = static_cast<Byte>(randInt >> 24);
@@ -343,7 +346,7 @@ Byte EthernetAddressManager::strHexToByte(Byte str) {
  * @return
  */
 /*static*/
-BYTE_ARRAY<2> EthernetAddressManager::byteToStrHex(Byte b)  {
+BYTE_ARRAY<2> EthernetAddressManager::byteToStrHex(Byte b) {
     char buf[10];
     sprintf(buf, "%x", b);
     std::string s(buf);

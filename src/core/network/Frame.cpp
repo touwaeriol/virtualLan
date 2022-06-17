@@ -3,7 +3,7 @@
 //
 
 #include <stdint.h>
-
+#include <co/byte_order.h>
 
 #include "network/Frame.h"
 
@@ -18,24 +18,23 @@ namespace vl::core {
      * @param frame
      * @return
      */
-    template<int MTU>
-    FrameType Frame<MTU>::frameType(const Frame<MTU> &&frame) {
-        uint32_t length = *reinterpret_cast<uint16_t *> (&(frame._content[12]));
-        if (length >= 1536){
+    FrameType Frame::frameType(const vector <Byte> &content) {
+        uint32_t length = ntoh16(*reinterpret_cast<uint16_t *> (&const_cast<vector <Byte> &>(content)[12]));
+        if (length >= 1536) {
             return ETHERNET_V2;
-        } else if(length < 1500){
-            uint32_t lldc = *reinterpret_cast<uint16_t *> (&(frame._content[14]));
-            if(lldc == 0xFFFF){
+        } else if (length < 1500) {
+            uint32_t lldc = ntoh16(*reinterpret_cast<uint16_t *> (&const_cast<vector <Byte> &>(content)[14]));
+            if (lldc == 0xFFFF) {
                 return ETHERNET_NOVELL;
-            }else if(lldc ==0xAAAA ){
+            } else if (lldc == 0xAAAA) {
                 return ETHERNET_SNAP;
-            }else{
+            } else {
                 return ETHERNET_202_2;
             }
-        } else{
+        } else {
             return UNKNOWN;
         }
-
     }
+
 
 }

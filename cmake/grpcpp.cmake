@@ -1,4 +1,3 @@
-#find_library(grpc++ grpc++)
 
 include(FetchContent)
 FetchContent_Declare(

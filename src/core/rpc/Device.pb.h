@@ -195,11 +195,13 @@ class Device final :
     kIpFieldNumber = 4,
     kIpv6FieldNumber = 6,
     kPublicIpFieldNumber = 8,
-    kPublicIpv6FieldNumber = 9,
-    kGroupFieldNumber = 10,
+    kPublicIpv6FieldNumber = 10,
+    kPublicIpv6UdpPortFieldNumber = 11,
+    kGroupFieldNumber = 12,
     kMtuFieldNumber = 3,
     kIpNetmaskFieldNumber = 5,
     kPrefixLengthFieldNumber = 7,
+    kPublicUdpPortFieldNumber = 9,
   };
   // string clientId = 1;
   void clear_clientid();
@@ -271,7 +273,7 @@ class Device final :
   std::string* _internal_mutable_publicip();
   public:
 
-  // string publicIpv6 = 9;
+  // string publicIpv6 = 10;
   void clear_publicipv6();
   const std::string& publicipv6() const;
   template <typename ArgT0 = const std::string&, typename... ArgT>
@@ -285,7 +287,21 @@ class Device final :
   std::string* _internal_mutable_publicipv6();
   public:
 
-  // string group = 10;
+  // string publicIpv6UdpPort = 11;
+  void clear_publicipv6udpport();
+  const std::string& publicipv6udpport() const;
+  template <typename ArgT0 = const std::string&, typename... ArgT>
+  void set_publicipv6udpport(ArgT0&& arg0, ArgT... args);
+  std::string* mutable_publicipv6udpport();
+  PROTOBUF_NODISCARD std::string* release_publicipv6udpport();
+  void set_allocated_publicipv6udpport(std::string* publicipv6udpport);
+  private:
+  const std::string& _internal_publicipv6udpport() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_publicipv6udpport(const std::string& value);
+  std::string* _internal_mutable_publicipv6udpport();
+  public:
+
+  // string group = 12;
   void clear_group();
   const std::string& group() const;
   template <typename ArgT0 = const std::string&, typename... ArgT>
@@ -326,6 +342,15 @@ class Device final :
   void _internal_set_prefixlength(uint32_t value);
   public:
 
+  // uint32 publicUdpPort = 9;
+  void clear_publicudpport();
+  uint32_t publicudpport() const;
+  void set_publicudpport(uint32_t value);
+  private:
+  uint32_t _internal_publicudpport() const;
+  void _internal_set_publicudpport(uint32_t value);
+  public:
+
   // @@protoc_insertion_point(class_scope:vl.core.Device)
  private:
   class _Internal;
@@ -339,10 +364,12 @@ class Device final :
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr ipv6_;
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr publicip_;
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr publicipv6_;
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr publicipv6udpport_;
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr group_;
   uint32_t mtu_;
   uint32_t ipnetmask_;
   uint32_t prefixlength_;
+  uint32_t publicudpport_;
   mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   friend struct ::TableStruct_Device_2eproto;
 };
@@ -672,7 +699,27 @@ inline void Device::set_allocated_publicip(std::string* publicip) {
   // @@protoc_insertion_point(field_set_allocated:vl.core.Device.publicIp)
 }
 
-// string publicIpv6 = 9;
+// uint32 publicUdpPort = 9;
+inline void Device::clear_publicudpport() {
+  publicudpport_ = 0u;
+}
+inline uint32_t Device::_internal_publicudpport() const {
+  return publicudpport_;
+}
+inline uint32_t Device::publicudpport() const {
+  // @@protoc_insertion_point(field_get:vl.core.Device.publicUdpPort)
+  return _internal_publicudpport();
+}
+inline void Device::_internal_set_publicudpport(uint32_t value) {
+  
+  publicudpport_ = value;
+}
+inline void Device::set_publicudpport(uint32_t value) {
+  _internal_set_publicudpport(value);
+  // @@protoc_insertion_point(field_set:vl.core.Device.publicUdpPort)
+}
+
+// string publicIpv6 = 10;
 inline void Device::clear_publicipv6() {
   publicipv6_.ClearToEmpty();
 }
@@ -723,7 +770,58 @@ inline void Device::set_allocated_publicipv6(std::string* publicipv6) {
   // @@protoc_insertion_point(field_set_allocated:vl.core.Device.publicIpv6)
 }
 
-// string group = 10;
+// string publicIpv6UdpPort = 11;
+inline void Device::clear_publicipv6udpport() {
+  publicipv6udpport_.ClearToEmpty();
+}
+inline const std::string& Device::publicipv6udpport() const {
+  // @@protoc_insertion_point(field_get:vl.core.Device.publicIpv6UdpPort)
+  return _internal_publicipv6udpport();
+}
+template <typename ArgT0, typename... ArgT>
+inline PROTOBUF_ALWAYS_INLINE
+void Device::set_publicipv6udpport(ArgT0&& arg0, ArgT... args) {
+ 
+ publicipv6udpport_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
+  // @@protoc_insertion_point(field_set:vl.core.Device.publicIpv6UdpPort)
+}
+inline std::string* Device::mutable_publicipv6udpport() {
+  std::string* _s = _internal_mutable_publicipv6udpport();
+  // @@protoc_insertion_point(field_mutable:vl.core.Device.publicIpv6UdpPort)
+  return _s;
+}
+inline const std::string& Device::_internal_publicipv6udpport() const {
+  return publicipv6udpport_.Get();
+}
+inline void Device::_internal_set_publicipv6udpport(const std::string& value) {
+  
+  publicipv6udpport_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, value, GetArenaForAllocation());
+}
+inline std::string* Device::_internal_mutable_publicipv6udpport() {
+  
+  return publicipv6udpport_.Mutable(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, GetArenaForAllocation());
+}
+inline std::string* Device::release_publicipv6udpport() {
+  // @@protoc_insertion_point(field_release:vl.core.Device.publicIpv6UdpPort)
+  return publicipv6udpport_.Release(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArenaForAllocation());
+}
+inline void Device::set_allocated_publicipv6udpport(std::string* publicipv6udpport) {
+  if (publicipv6udpport != nullptr) {
+    
+  } else {
+    
+  }
+  publicipv6udpport_.SetAllocated(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), publicipv6udpport,
+      GetArenaForAllocation());
+#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (publicipv6udpport_.IsDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited())) {
+    publicipv6udpport_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), "", GetArenaForAllocation());
+  }
+#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  // @@protoc_insertion_point(field_set_allocated:vl.core.Device.publicIpv6UdpPort)
+}
+
+// string group = 12;
 inline void Device::clear_group() {
   group_.ClearToEmpty();
 }

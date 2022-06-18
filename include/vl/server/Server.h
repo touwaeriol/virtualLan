@@ -13,6 +13,7 @@
 
 
 #include "service/RegisterServiceImpl.h"
+#include "ethernet/EtherData.h"
 
 using namespace std;
 using namespace vl::core;
@@ -53,6 +54,7 @@ namespace vl::server {
 
         void setNetmask(int netmask);
 
+
     private:
         void initUdpSocket();
 
@@ -75,18 +77,15 @@ namespace vl::server {
 
         shared_ptr<RegisterServiceImpl> _register;
 
-        vector<Byte> _buf;
-
         sock_t _udpSock;
 
         sockaddr_in _addr;
 
-        moodycamel::BlockingReaderWriterCircularBuffer<std::unique_ptr<vector<Byte>>> _dataQueue;
+        moodycamel::BlockingReaderWriterCircularBuffer<std::unique_ptr<EtherData>> _dataQueue;
 
         std::unique_ptr<Thread> _dataHandler;
 
-
-        void onReceiveData( vector<Byte> &data);
+        void onReceiveData(const EtherData &data);
     };
 }
 

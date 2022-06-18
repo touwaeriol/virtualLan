@@ -13,6 +13,8 @@
 
 namespace vl::core {
     class Frame;
+
+    class EthernetV2Frame;
 }
 
 
@@ -29,9 +31,7 @@ namespace vl::core {
 
 
     class Frame {
-
-    public:
-        static FrameType frameType(const vector <Byte> &content);
+        friend class EthernetV2Frame;
 
     public:
         virtual pair<const Byte *, size_t> src() = 0;
@@ -41,6 +41,11 @@ namespace vl::core {
         virtual array<Byte, 2> lengthOrType() = 0;
 
         virtual pair<const Byte *, size_t> data() = 0;
+
+    public:
+        static FrameType frameType(const vector<Byte> &content);
+
+
 
     };
 

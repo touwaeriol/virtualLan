@@ -13,6 +13,8 @@
 
 namespace vl::server {
     class EthernetAddressManager;
+
+    class Server;
 }
 
 
@@ -23,6 +25,7 @@ namespace vl::server {
      * 网络地址管理器，一个分组一个管理器
      */
     class EthernetAddressManager : public Uncopymovable {
+        friend class Server;
 
 
     public:
@@ -53,6 +56,7 @@ namespace vl::server {
 
         bool ipv6InUse(IPV6_ADDRESS addr) const;
 
+
     public:
 
         static IPV4_ADDRESS ipStrToAddr(std::string add);
@@ -65,7 +69,6 @@ namespace vl::server {
         static std::string ipv6AddrToStr(IPV6_ADDRESS add);
 
         static std::string macAddrToStr(MAC_ADDRESS add);
-
 
         static MAC_ADDRESS macStrToAddr(std::string add);
 
@@ -92,6 +95,15 @@ namespace vl::server {
         IPV4_ADDRESS nextIp() const;
 
         MAC_ADDRESS nextMac() const;
+
+        /**
+         * 设置mac地址对应的udp端口
+         * @param mac
+         * @param port
+         * @return
+         */
+        std::pair<bool, string> setDeviceUdpPort(MAC_ADDRESS mac, uint32 port);
+
 
     private:
 
@@ -124,17 +136,18 @@ namespace vl::server {
         /**
          * 客户端客户端id与虚拟ip的映射
          */
-        unordered_map<MAC_ADDRESS /*mac*/, shared_ptr<Device>, AddressHasher<MAC_LEN>, AddressEquals<MAC_ADDRESS>> _macDeviceMap{1024};
+        unordered_map<MAC_ADDRESS /*mac*/, shared_ptr<Device>, AddressHasher<MAC_LEN>, AddressEquals<MAC_ADDRESS>> _macDeviceMap{
+                1024};
 
         /**
          * 已经分配的ip
          */
-        unordered_set<IPV4_ADDRESS, AddressHasher<IPV4_LEN>,AddressEquals<IPV4_ADDRESS>> _allocedIp{1024};
+        unordered_set<IPV4_ADDRESS, AddressHasher<IPV4_LEN>, AddressEquals<IPV4_ADDRESS>> _allocedIp{1024};
 
         /**
          * 已经分配的ipv6
          */
-        unordered_set<IPV6_ADDRESS, AddressHasher<IPV6_LEN>,AddressEquals<IPV6_ADDRESS>> _allocedIpv6{1024};
+        unordered_set<IPV6_ADDRESS, AddressHasher<IPV6_LEN>, AddressEquals<IPV6_ADDRESS>> _allocedIpv6{1024};
 
         /**
          * 已经分配的mac地址

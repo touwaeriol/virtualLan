@@ -26,10 +26,12 @@ constexpr Device::Device(
   , ipv6_(&::PROTOBUF_NAMESPACE_ID::internal::fixed_address_empty_string)
   , publicip_(&::PROTOBUF_NAMESPACE_ID::internal::fixed_address_empty_string)
   , publicipv6_(&::PROTOBUF_NAMESPACE_ID::internal::fixed_address_empty_string)
+  , publicipv6udpport_(&::PROTOBUF_NAMESPACE_ID::internal::fixed_address_empty_string)
   , group_(&::PROTOBUF_NAMESPACE_ID::internal::fixed_address_empty_string)
   , mtu_(0u)
   , ipnetmask_(0u)
-  , prefixlength_(0u){}
+  , prefixlength_(0u)
+  , publicudpport_(0u){}
 struct DeviceDefaultTypeInternal {
   constexpr DeviceDefaultTypeInternal()
     : _instance(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized{}) {}
@@ -60,7 +62,9 @@ const uint32_t TableStruct_Device_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE(p
   PROTOBUF_FIELD_OFFSET(::vl::core::Device, ipv6_),
   PROTOBUF_FIELD_OFFSET(::vl::core::Device, prefixlength_),
   PROTOBUF_FIELD_OFFSET(::vl::core::Device, publicip_),
+  PROTOBUF_FIELD_OFFSET(::vl::core::Device, publicudpport_),
   PROTOBUF_FIELD_OFFSET(::vl::core::Device, publicipv6_),
+  PROTOBUF_FIELD_OFFSET(::vl::core::Device, publicipv6udpport_),
   PROTOBUF_FIELD_OFFSET(::vl::core::Device, group_),
 };
 static const ::PROTOBUF_NAMESPACE_ID::internal::MigrationSchema schemas[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
@@ -72,16 +76,17 @@ static ::PROTOBUF_NAMESPACE_ID::Message const * const file_default_instances[] =
 };
 
 const char descriptor_table_protodef_Device_2eproto[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) =
-  "\n\014Device.proto\022\007vl.core\"\254\001\n\006Device\022\020\n\010cl"
+  "\n\014Device.proto\022\007vl.core\"\336\001\n\006Device\022\020\n\010cl"
   "ientId\030\001 \001(\t\022\013\n\003mac\030\002 \001(\t\022\013\n\003mtu\030\003 \001(\r\022\n"
   "\n\002ip\030\004 \001(\t\022\021\n\tipNetmask\030\005 \001(\r\022\014\n\004ipv6\030\006 "
   "\001(\t\022\024\n\014prefixLength\030\007 \001(\r\022\020\n\010publicIp\030\010 "
-  "\001(\t\022\022\n\npublicIpv6\030\t \001(\t\022\r\n\005group\030\n \001(\tb\006"
-  "proto3"
+  "\001(\t\022\025\n\rpublicUdpPort\030\t \001(\r\022\022\n\npublicIpv6"
+  "\030\n \001(\t\022\031\n\021publicIpv6UdpPort\030\013 \001(\t\022\r\n\005gro"
+  "up\030\014 \001(\tb\006proto3"
   ;
 static ::PROTOBUF_NAMESPACE_ID::internal::once_flag descriptor_table_Device_2eproto_once;
 const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable descriptor_table_Device_2eproto = {
-  false, false, 206, descriptor_table_protodef_Device_2eproto, "Device.proto", 
+  false, false, 256, descriptor_table_protodef_Device_2eproto, "Device.proto", 
   &descriptor_table_Device_2eproto_once, nullptr, 0, 1,
   schemas, file_default_instances, TableStruct_Device_2eproto::offsets,
   file_level_metadata_Device_2eproto, file_level_enum_descriptors_Device_2eproto, file_level_service_descriptors_Device_2eproto,
@@ -161,6 +166,14 @@ Device::Device(const Device& from)
     publicipv6_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, from._internal_publicipv6(), 
       GetArenaForAllocation());
   }
+  publicipv6udpport_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    publicipv6udpport_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), "", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (!from._internal_publicipv6udpport().empty()) {
+    publicipv6udpport_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, from._internal_publicipv6udpport(), 
+      GetArenaForAllocation());
+  }
   group_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
     group_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), "", GetArenaForAllocation());
@@ -170,8 +183,8 @@ Device::Device(const Device& from)
       GetArenaForAllocation());
   }
   ::memcpy(&mtu_, &from.mtu_,
-    static_cast<size_t>(reinterpret_cast<char*>(&prefixlength_) -
-    reinterpret_cast<char*>(&mtu_)) + sizeof(prefixlength_));
+    static_cast<size_t>(reinterpret_cast<char*>(&publicudpport_) -
+    reinterpret_cast<char*>(&mtu_)) + sizeof(publicudpport_));
   // @@protoc_insertion_point(copy_constructor:vl.core.Device)
 }
 
@@ -200,14 +213,18 @@ publicipv6_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringA
 #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
   publicipv6_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), "", GetArenaForAllocation());
 #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+publicipv6udpport_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  publicipv6udpport_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), "", GetArenaForAllocation());
+#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
 group_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
 #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
   group_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), "", GetArenaForAllocation());
 #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
 ::memset(reinterpret_cast<char*>(this) + static_cast<size_t>(
     reinterpret_cast<char*>(&mtu_) - reinterpret_cast<char*>(this)),
-    0, static_cast<size_t>(reinterpret_cast<char*>(&prefixlength_) -
-    reinterpret_cast<char*>(&mtu_)) + sizeof(prefixlength_));
+    0, static_cast<size_t>(reinterpret_cast<char*>(&publicudpport_) -
+    reinterpret_cast<char*>(&mtu_)) + sizeof(publicudpport_));
 }
 
 Device::~Device() {
@@ -225,6 +242,7 @@ inline void Device::SharedDtor() {
   ipv6_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   publicip_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   publicipv6_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  publicipv6udpport_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   group_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
 }
 
@@ -250,10 +268,11 @@ void Device::Clear() {
   ipv6_.ClearToEmpty();
   publicip_.ClearToEmpty();
   publicipv6_.ClearToEmpty();
+  publicipv6udpport_.ClearToEmpty();
   group_.ClearToEmpty();
   ::memset(&mtu_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&prefixlength_) -
-      reinterpret_cast<char*>(&mtu_)) + sizeof(prefixlength_));
+      reinterpret_cast<char*>(&publicudpport_) -
+      reinterpret_cast<char*>(&mtu_)) + sizeof(publicudpport_));
   _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
@@ -337,9 +356,17 @@ const char* Device::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::int
         } else
           goto handle_unusual;
         continue;
-      // string publicIpv6 = 9;
+      // uint32 publicUdpPort = 9;
       case 9:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 74)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 72)) {
+          publicudpport_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // string publicIpv6 = 10;
+      case 10:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 82)) {
           auto str = _internal_mutable_publicipv6();
           ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
           CHK_(::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "vl.core.Device.publicIpv6"));
@@ -347,9 +374,19 @@ const char* Device::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::int
         } else
           goto handle_unusual;
         continue;
-      // string group = 10;
-      case 10:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 82)) {
+      // string publicIpv6UdpPort = 11;
+      case 11:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 90)) {
+          auto str = _internal_mutable_publicipv6udpport();
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "vl.core.Device.publicIpv6UdpPort"));
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // string group = 12;
+      case 12:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 98)) {
           auto str = _internal_mutable_group();
           ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
           CHK_(::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "vl.core.Device.group"));
@@ -454,24 +491,40 @@ uint8_t* Device::_InternalSerialize(
         8, this->_internal_publicip(), target);
   }
 
-  // string publicIpv6 = 9;
+  // uint32 publicUdpPort = 9;
+  if (this->_internal_publicudpport() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt32ToArray(9, this->_internal_publicudpport(), target);
+  }
+
+  // string publicIpv6 = 10;
   if (!this->_internal_publicipv6().empty()) {
     ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
       this->_internal_publicipv6().data(), static_cast<int>(this->_internal_publicipv6().length()),
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
       "vl.core.Device.publicIpv6");
     target = stream->WriteStringMaybeAliased(
-        9, this->_internal_publicipv6(), target);
+        10, this->_internal_publicipv6(), target);
   }
 
-  // string group = 10;
+  // string publicIpv6UdpPort = 11;
+  if (!this->_internal_publicipv6udpport().empty()) {
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_publicipv6udpport().data(), static_cast<int>(this->_internal_publicipv6udpport().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
+      "vl.core.Device.publicIpv6UdpPort");
+    target = stream->WriteStringMaybeAliased(
+        11, this->_internal_publicipv6udpport(), target);
+  }
+
+  // string group = 12;
   if (!this->_internal_group().empty()) {
     ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
       this->_internal_group().data(), static_cast<int>(this->_internal_group().length()),
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
       "vl.core.Device.group");
     target = stream->WriteStringMaybeAliased(
-        10, this->_internal_group(), target);
+        12, this->_internal_group(), target);
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
@@ -525,14 +578,21 @@ size_t Device::ByteSizeLong() const {
         this->_internal_publicip());
   }
 
-  // string publicIpv6 = 9;
+  // string publicIpv6 = 10;
   if (!this->_internal_publicipv6().empty()) {
     total_size += 1 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
         this->_internal_publicipv6());
   }
 
-  // string group = 10;
+  // string publicIpv6UdpPort = 11;
+  if (!this->_internal_publicipv6udpport().empty()) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_publicipv6udpport());
+  }
+
+  // string group = 12;
   if (!this->_internal_group().empty()) {
     total_size += 1 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
@@ -552,6 +612,11 @@ size_t Device::ByteSizeLong() const {
   // uint32 prefixLength = 7;
   if (this->_internal_prefixlength() != 0) {
     total_size += ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::UInt32SizePlusOne(this->_internal_prefixlength());
+  }
+
+  // uint32 publicUdpPort = 9;
+  if (this->_internal_publicudpport() != 0) {
+    total_size += ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::UInt32SizePlusOne(this->_internal_publicudpport());
   }
 
   return MaybeComputeUnknownFieldsSize(total_size, &_cached_size_);
@@ -594,6 +659,9 @@ void Device::MergeFrom(const Device& from) {
   if (!from._internal_publicipv6().empty()) {
     _internal_set_publicipv6(from._internal_publicipv6());
   }
+  if (!from._internal_publicipv6udpport().empty()) {
+    _internal_set_publicipv6udpport(from._internal_publicipv6udpport());
+  }
   if (!from._internal_group().empty()) {
     _internal_set_group(from._internal_group());
   }
@@ -605,6 +673,9 @@ void Device::MergeFrom(const Device& from) {
   }
   if (from._internal_prefixlength() != 0) {
     _internal_set_prefixlength(from._internal_prefixlength());
+  }
+  if (from._internal_publicudpport() != 0) {
+    _internal_set_publicudpport(from._internal_publicudpport());
   }
   _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
 }
@@ -657,12 +728,17 @@ void Device::InternalSwap(Device* other) {
   );
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
       &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
+      &publicipv6udpport_, lhs_arena,
+      &other->publicipv6udpport_, rhs_arena
+  );
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
       &group_, lhs_arena,
       &other->group_, rhs_arena
   );
   ::PROTOBUF_NAMESPACE_ID::internal::memswap<
-      PROTOBUF_FIELD_OFFSET(Device, prefixlength_)
-      + sizeof(Device::prefixlength_)
+      PROTOBUF_FIELD_OFFSET(Device, publicudpport_)
+      + sizeof(Device::publicudpport_)
       - PROTOBUF_FIELD_OFFSET(Device, mtu_)>(
           reinterpret_cast<char*>(&mtu_),
           reinterpret_cast<char*>(&other->mtu_));

@@ -48,7 +48,7 @@ std::shared_ptr<Device> vl::server::EthernetAddressManager::allocDevice() {
     device->set_mtu(VL_TAP_MAX_MTU);
     device->set_ipnetmask(24);
 
-    _macDeviceMap.emplace(macStrToAddr(device->mac()),device);
+    _macDeviceMap.emplace(macStrToAddr(device->mac()), device);
     return device;
 }
 
@@ -130,6 +130,21 @@ bool EthernetAddressManager::ipv6InUse(vl::core::IPV6_ADDRESS addr) const {
     }
     return false;
 }
+
+std::pair<bool,string>  EthernetAddressManager::setDeviceUdpPort(MAC_ADDRESS mac, uint32 port) {
+    auto block = MutexGuard(_mutex);
+    auto it = _macDeviceMap.find(mac);
+    if(port == 0){
+        return {false, "错误的端口，端口必须大于0"};
+    }
+    if(it == _macDeviceMap.end()){
+        it->second->set_publicudpport(port);
+        return {true,""};
+    }else{
+        return {false,"mac地址不存在"};
+    }
+}
+
 
 IPV6_ADDRESS EthernetAddressManager::allocIpv6(vl::core::IPV6_ADDRESS expect) {
     IPV6_ADDRESS c;

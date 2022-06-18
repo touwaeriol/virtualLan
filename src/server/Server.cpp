@@ -7,7 +7,7 @@
 vl::server::Server::Server(const string &listenHost, int listenPort, const pair<string, string> &ipRange, int netmask,
                            size_t dataQueueCap, int mtu)
         : _listenHost(listenHost), _listenPort(listenPort), _ipRange(ipRange), _netmask(netmask),
-          _dataQueue(moodycamel::BlockingReaderWriterCircularBuffer<std::unique_ptr<vector<Byte>>>(dataQueueCap)),
+          _dataQueue(moodycamel::BlockingReaderWriterCircularBuffer<std::unique_ptr<EtherData>>(dataQueueCap)),
           _mtu(mtu) {}
 
 
@@ -16,8 +16,6 @@ void vl::server::Server::init() {
     _register = make_shared<RegisterServiceImpl>(_ipRange.first, _ipRange.second, _netmask);
     _builder.RegisterService(_register.get());
     _builder.AddListeningPort(_listenHost + ":" + to_string(_listenPort), grpc::InsecureServerCredentials(), nullptr);
-    DLOG << "初始化buf";
-    _buf.resize(_mtu);
 
     DLOG << "初始化udpsocket";
     _udpSock = co::udp_socket();
@@ -86,35 +84,81 @@ void vl::server::Server::initUdpSocket() {
 void vl::server::Server::loopUdpData() {
     //使用协程接收数据
     co::go([this]() -> void {
-        std::unique_ptr<vector<Byte>> buf;
+        auto buf = std::make_unique<EtherData>();
         while (true) {
-            sockaddr_in peer{};
-            buf = std::make_unique<vector<Byte>>();
-            buf->resize(_mtu);
+            buf->_data.resize(_mtu);
             int addrLen = sizeof(sockaddr_in);
-            auto code = co::recvfrom(_udpSock, buf->data(), static_cast<int>(buf->size()), &peer, &addrLen);
-            if (code == -1) {
-                FLOG << "接收数据错误";
-            } else if (code == 0) {
-                FLOG << "socket已经关闭";
-            } else {
-                buf->resize(code);
-//                DLOG << "收到来自 " << co::ip_str(&peer).c_str() << "的数据包，加入到数据队列中";
-                _dataQueue.try_enqueue(std::move(buf));
+            auto code = co::recvfrom(_udpSock, buf->_data.data(), static_cast<int>(buf->_data.size()), &buf->peer,
+                                     &addrLen);
+            switch (code) {
+                case -1 : {
+                    FLOG << "接收数据错误";
+
+                    break;
+                }
+                case 0: {
+                    FLOG << "socket已经关闭";
+
+                    break;
+                }
+                default : {
+                    buf->_data.resize(code);
+                    _dataQueue.try_enqueue(std::move(buf));
+                }
             }
         }
     });
     //使用线程处理数据
     _dataHandler = std::make_unique<Thread>([this]() -> void {
-        auto data = std::unique_ptr<vector<Byte>>();
+        auto data = std::unique_ptr<EtherData>();
         _dataQueue.wait_dequeue(data);
-        co::go([this,data{move(data)}] () -> void {
+        co::go([this, data{move(data)}]() -> void {
             //处理数据
             this->onReceiveData(*data);
         });
     });
 }
 
-void vl::server::Server::onReceiveData(vector<Byte> &data) {
+void vl::server::Server::onReceiveData(const EtherData &data) {
+    auto type = vl::core::Frame::frameType(data._data);
+    if (data._data.size() >= 42) {
+        switch (data._data.size()) {
+            case MAC_LEN : {
+                std::array<Byte, MAC_LEN> mac{};
+                memcpy(mac.data(), data._data.data(), MAC_LEN);
+                //找到了设备
+                auto result = _register->_manager.setDeviceUdpPort(mac, ntoh32(data.peer.sin_port));
+                if (!result.first) {
+                    WLOG << "mac 地址 " << (EthernetAddressManager::macAddrToStr(mac)) << "不存在";
+                }
+                break;
+            }
+            default : {
+
+                break;
+            }
+
+
+        }
+
+    } else {
+        switch (type) {
+            case core::ETHERNET_V2: {
+                EthernetV2Frame frame{data._data};
+                auto dest = frame.dest();
+                // 如果第一个字节的最低位是1，则是多播？不然就是单播
+                if ((dest.first[0] & 0x01) == 0x01) {
+
+                } else {
+
+                }
+                break;
+            }
+            default: {
+                DLOG << "不能识别的数据格式";
+                break;
+            }
+        }
+    }
 
 }

@@ -9,12 +9,10 @@
 
 #include <grpcpp/grpcpp.h>
 
-#include <blockingconcurrentqueue.h>
 #include <concurrentqueue.h>
+#include <blockingconcurrentqueue.h>
 #include <readerwriterqueue.h>
 #include <readerwritercircularbuffer.h>
-
-#include <cuckoohash_map.hh>
 
 
 #include <co/all.h>
@@ -26,6 +24,7 @@
 #include "core/network/Tap.h"
 #include "core/network/EthernetV2Frame.h"
 #include "core/network/staticDataPackage.h"
+#include "core/network/EtherData.h"
 
 #include "core/util/define.h"
 #include "core/util/typeDefile.h"

@@ -26,8 +26,12 @@ message Device{
 
   string publicIp = 8;
 
-  string publicIpv6 = 9;
+  uint32 publicUdpPort = 9;
+
+  string publicIpv6 = 10;
+
+  string publicIpv6UdpPort = 11;
 
   // 客户端所属分组
-  string group = 10;
+  string group = 12;
 }

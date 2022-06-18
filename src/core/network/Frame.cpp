@@ -4,6 +4,7 @@
 
 #include <stdint.h>
 #include <co/byte_order.h>
+#include <netinet/in.h>
 
 #include "network/Frame.h"
 
@@ -35,6 +36,7 @@ namespace vl::core {
             return UNKNOWN;
         }
     }
+
 
 
 }

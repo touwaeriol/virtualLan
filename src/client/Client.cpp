@@ -88,15 +88,6 @@ namespace vl::client {
         if (code == -1) {
             FLOG << "socket 绑定本地端口" << to_string(_udpPort) << "失败" << co::strerror(co::error());
         }
-        //buf申请空间
-        DLOG << "初始化缓冲区";
-        _buf.reserve(_dataQueue.max_capacity());
-        auto mtu = _device.mtu();
-        for (int i = 0; i < _dataQueue.max_capacity(); ++i) {
-            auto b = std::make_unique<vector<Byte>>();
-            b->reserve(mtu);
-            this->_buf.remplace(std::move(b));
-        }
         DLOG << "转发tap设备的流量";
         loopUdpData();
         DLOG << "完成";
@@ -121,11 +112,7 @@ namespace vl::client {
             size_t len;
             auto mtu = this->_device.mtu();
             while (true) {
-                if(_buf.size() == 0 ){
-                    WLOG << "缓冲区空间不足！！";
-                    continue;
-                }
-                auto data = _buf.tr();
+                auto data = std::make_unique<vector<Byte>>();
                 data->resize(mtu);
                 len = this->_tap.read(data->data(), data->size());
                 if (len == -1) {
@@ -155,8 +142,6 @@ namespace vl::client {
                 co::go([this, data{move(data)}]() mutable -> void {
                     //处理数据
                     this->onReceiveData(*data);
-                    //放回缓冲区
-                    this->_buf.t(std::move(data));
                 });
             }
         });
@@ -178,7 +163,6 @@ namespace vl::client {
 
 
     void Client::onReceiveData(const vector<Byte> &data) {
-//        auto f = EthernetV2Frame(data);
         auto code = co::sendto(_sock, data.data(), static_cast<int >(data.size()), &_serverAddr, sizeof(sockaddr_in));
         if (code == -1) {
             FLOG << "数据传输失败";

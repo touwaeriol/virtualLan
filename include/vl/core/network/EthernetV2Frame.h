@@ -13,7 +13,7 @@
 
 namespace vl::core {
 
-    class EthernetV2Frame;
+    struct EthernetV2Frame;
 }
 
 
@@ -28,12 +28,12 @@ namespace vl::core {
     };
 
 
-    class EthernetV2Frame : public Frame {
+    struct EthernetV2Frame : public Frame {
 
     public:
-        EthernetV2Frame(const vector <Byte> &data);
 
-        EthernetV2Frame(vector <Byte> &&data);
+        EthernetV2Frame(const vector<Byte> & data);
+
 
     public:
 
@@ -41,15 +41,13 @@ namespace vl::core {
 
         pair<const Byte *, size_t> dest() override;
 
-        array<Byte ,2> lengthOrType() override;
+        array<Byte, 2> lengthOrType() override;
 
         pair<const Byte *, size_t> data() override;
 
     private:
 
-
-    private:
-        vector <Byte> _data;
+        unique_ptr<const vector <Byte>> _data;
 
 
     };

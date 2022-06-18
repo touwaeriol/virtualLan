@@ -11,19 +11,26 @@
 #include <vl/core.h>
 #include "ethernet/EthernetAddressManager.h"
 
-namespace vl::server{
+namespace vl::server {
+    class Server;
 
-    class RegisterServiceImpl :public vl::core::RegisterService::Service{
+}
+
+namespace vl::server {
+
+
+    class RegisterServiceImpl : public vl::core::RegisterService::Service {
+        friend class Server;
 
 
     public:
 
-        RegisterServiceImpl(std::string ipStart,std::string ipEnd,int netmask);
+        RegisterServiceImpl(std::string ipStart, std::string ipEnd, int netmask);
 
         ~RegisterServiceImpl() override;
 
         grpc::Status registe(::grpc::ServerContext *context, const ::vl::core::RegisterRequest *request,
-                              ::vl::core::RegisterResponse *response) override;
+                             ::vl::core::RegisterResponse *response) override;
 
     private:
 
@@ -31,11 +38,10 @@ namespace vl::server{
 
         uint32 _netmask;
 
-        uint32  mtu;
+        uint32 mtu;
 
     };
 }
-
 
 
 #endif //VIRTUALLAN_REGISTERSERVICEIMPL_H

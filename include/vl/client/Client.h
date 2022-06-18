@@ -10,6 +10,7 @@
 #include "Client.h"
 
 
+
 namespace vl::client {
     class Client;
 
@@ -76,14 +77,11 @@ namespace vl::client {
 
         std::string _tapName;
 
-        moodycamel::ReaderWriterQueue<std::unique_ptr<vector<Byte>> _buf;
-
         unique_ptr<Thread> _dataReader;
 
         unique_ptr<Thread> _dataHandler;
 
-        moodycamel::BlockingReaderWriterCircularBuffer<std::unique_ptr<vector < Byte>>>
-        _dataQueue;
+        moodycamel::BlockingReaderWriterCircularBuffer<std::unique_ptr<vector < Byte>>>_dataQueue;
 
         sock_t _sock;
         sockaddr_in _serverAddr;

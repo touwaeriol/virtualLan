@@ -15,16 +15,15 @@
 #include <readerwritercircularbuffer.h>
 
 
-#include <co/all.h>
-
 #include "core/log/consoleLog.h"
+#include "core/log/Logging.h"
 #include "core/rpc/RegisterService.grpc.pb.h"
 
 #include "core/network/address.h"
 #include "core/network/Tap.h"
 #include "core/network/EthernetV2Frame.h"
 #include "core/network/staticDataPackage.h"
-#include "core/network/EtherData.h"
+
 
 #include "core/util/define.h"
 #include "core/util/typeDefile.h"

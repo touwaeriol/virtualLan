@@ -104,6 +104,12 @@ namespace vl::server {
          */
         std::pair<bool, string> setDeviceUdpPort(MAC_ADDRESS mac, uint32 port);
 
+        /**
+         * 根据mac地址获取信息
+         * @param mac
+         * @return
+         */
+        std::optional<pair<IPV4_ADDRESS,uint32>> getDevicePublicAddr(MAC_ADDRESS mac);
 
     private:
 

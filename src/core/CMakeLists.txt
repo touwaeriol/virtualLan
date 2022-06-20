@@ -20,28 +20,28 @@ target_include_directories(${TARGET_NAME} PUBLIC ${PROJECT_PATH}/include/vl/core
 
 include(grpcpp)
 include(libtuntap)
-include(hiredis)
-include(cocoyaxi)
+include(asio)
 include(stduuid)
 include(concurrentqueue)
+include(cocoyaxi)
 
 
 SET(LIBS
         ${GRPCPP_LIB_NAME}
         ${LIBTUNTAP_LIB_NAME}
-        ${HIREDIS_LIB_NAME}
-        ${COCOYAXI_LIB_NAME}
+        ${ASIO_LIB_NAME}
         ${STDUUID_LIB_NAME}
         ${CONCURRENTQUEUE_LIB_NAME}
+        ${COCOYAXI_LIB_NAME}
 
         )
 SET(INCLUDES
         ${GRPCPP_LIB_INCLUDE}
-        ${HIREDIS_LIB_INCLUDE}
-        ${COCOYAXI_LIB_INCLUDE}
+        ${ASIO_LIB_INCLUDE}
         ${STDUUID_LIB_INCLUDE}
         ${LIBTUNTAP_LIB_INCLUDE}
         ${CONCURRENTQUEUE_LIB_INCLUDE}
+        ${COCOYAXI_LIB_INCLUDE}
 
         )
 target_link_libraries(${TARGET_NAME} ${LIBS})

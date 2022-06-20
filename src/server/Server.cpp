@@ -129,7 +129,7 @@ void vl::server::Server::onReceiveData(const EtherData &data) {
                 //找到了设备
                 auto result = _register->_manager.setDeviceUdpPort(mac, ntoh32(data.peer.sin_port));
                 if (!result.first) {
-                    WLOG << "mac 地址 " << (EthernetAddressManager::macAddrToStr(mac)) << "不存在";
+                    WLOG << "mac 地址 " << (EthernetAddressManager::macAddrToStr(mac)) << result.second;
                 }
                 break;
             }
@@ -137,20 +137,18 @@ void vl::server::Server::onReceiveData(const EtherData &data) {
 
                 break;
             }
-
-
         }
-
     } else {
         switch (type) {
             case core::ETHERNET_V2: {
                 EthernetV2Frame frame{data._data};
                 auto dest = frame.dest();
                 // 如果第一个字节的最低位是1，则是多播？不然就是单播
-                if ((dest.first[0] & 0x01) == 0x01) {
+                auto broadcast = (dest.first[0] & 0x01) == 0x01;
+                if (broadcast) {
 
                 } else {
-
+                    _register->_manager.
                 }
                 break;
             }

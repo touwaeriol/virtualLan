@@ -145,6 +145,19 @@ std::pair<bool,string>  EthernetAddressManager::setDeviceUdpPort(MAC_ADDRESS mac
     }
 }
 
+/**
+      * 根据mac地址获取信息
+      * @param mac
+      * @return
+      */
+std::optional<pair<IPV4_ADDRESS,uint32>> EthernetAddressManager::getDevicePublicAddr(MAC_ADDRESS mac){
+    auto mutex = MutexGuard(_mutex);
+
+
+
+
+
+}
 
 IPV6_ADDRESS EthernetAddressManager::allocIpv6(vl::core::IPV6_ADDRESS expect) {
     IPV6_ADDRESS c;
@@ -255,6 +268,7 @@ std::string vl::server::EthernetAddressManager::ipv6AddrToStr(IPV6_ADDRESS add) 
 /*static*/
 MAC_ADDRESS EthernetAddressManager::macStrToAddr(std::string add) {
     MAC_ADDRESS r;
+    auto x = string("");
     auto sp = str::split(add, ':');
     for (int i = 0; i < MAC_LEN; i++) {
         auto s = sp[i];

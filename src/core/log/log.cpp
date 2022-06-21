@@ -8,9 +8,10 @@
 namespace vl::core {
 
     void initLog() {
+
     }
 
 
-    const spdlog::logger console = spdlog::logger("console");
+    const spdlog::logger CONSOLE = spdlog::logger("console");
 
 }

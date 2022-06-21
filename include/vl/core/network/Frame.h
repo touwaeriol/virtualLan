@@ -9,6 +9,7 @@
 #include <array>
 
 #include "util/typeDefile.h"
+#include "network/address.h"
 
 
 namespace vl::core {
@@ -34,9 +35,9 @@ namespace vl::core {
         friend class EthernetV2Frame;
 
     public:
-        virtual pair<const Byte *, size_t> src() = 0;
+        virtual MAC_ADDRESS src() = 0;
 
-        virtual pair<const Byte *, size_t> dest() = 0;
+        virtual MAC_ADDRESS dest() = 0;
 
         virtual array<Byte, 2> lengthOrType() = 0;
 

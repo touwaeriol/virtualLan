@@ -10,12 +10,16 @@ using namespace std;
 
 vl::core::EthernetV2Frame::EthernetV2Frame(const vector<Byte> &data) : _data(data) {}
 
-pair<const Byte *, size_t> vl::core::EthernetV2Frame::src() {
-    return {&_data[6], 6};
+vl::core::MAC_ADDRESS vl::core::EthernetV2Frame::src() {
+    auto mac = MAC_ADDRESS();
+    memcpy(mac.data(), &_data[6], MAC_LEN);
+    return mac;
 }
 
-pair<const Byte *, size_t> vl::core::EthernetV2Frame::dest() {
-    return {&_data[0], 0};
+vl::core::MAC_ADDRESS vl::core::EthernetV2Frame::dest() {
+    auto mac = MAC_ADDRESS();
+    memcpy(mac.data(), &_data[0], MAC_LEN);
+    return mac;
 }
 
 array<Byte, 2> vl::core::EthernetV2Frame::lengthOrType() {

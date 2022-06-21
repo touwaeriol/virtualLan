@@ -14,21 +14,7 @@ using namespace vl::core;
 using namespace vl::server;
 
 
-namespace test {
-
-    DEF_test(alloc) {
-        DEF_case(device)
-        {
-            vl::server::EthernetAddressManager e(std::pair<string, string>("192.168.101.1", "192.169.101.254"));
-            const shared_ptr<Device> &device = e.allocDevice();
-            std::cout << device->ip() << std::endl;
-            std::cout << device->mac() << std::endl;
-        }
-    }
-} // namespace test
-
-
-DEF_main(argc, argv) {
+int main(int argc, char **argv) {
     log::set_single_write_cb(vl::core::console_log_writer);
 
     unitest::run_all_tests();
@@ -45,10 +31,6 @@ DEF_main(argc, argv) {
     server.start();
 
     server.wait();
-
-
-
-
 
 
     return 0;

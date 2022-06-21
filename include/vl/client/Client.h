@@ -50,7 +50,6 @@ namespace vl::client {
 
         void loopUdpData();
 
-
         void onReceiveData(const vector<Byte> &data);
 
 
@@ -77,15 +76,16 @@ namespace vl::client {
 
         std::string _tapName;
 
-        unique_ptr<Thread> _dataReader;
+        unique_ptr<std::thread> _dataReader;
 
-        unique_ptr<Thread> _dataHandler;
+        unique_ptr<std::thread> _dataHandler;
 
         moodycamel::BlockingReaderWriterCircularBuffer<std::unique_ptr<vector < Byte>>>_dataQueue;
 
-        sock_t _sock;
-        sockaddr_in _serverAddr;
-        sockaddr_in _localAddr;
+        asio::io_context _udpContext;
+        asio::ip::udp::socket _udpSock;
+        asio::io::udp::endpoint _serverAddr;
+        asio::io::udp::endpoint _localAddr;
 
     };
 

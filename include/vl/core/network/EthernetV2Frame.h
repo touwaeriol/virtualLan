@@ -7,7 +7,7 @@
 
 #include <cstdint>
 #include <unordered_map>
-
+#include <memory>
 #include "Frame.h"
 
 
@@ -32,14 +32,14 @@ namespace vl::core {
 
     public:
 
-        EthernetV2Frame(const vector<Byte> & data);
+        EthernetV2Frame(const vector<Byte> &data);
 
 
     public:
 
-        pair<const Byte *, size_t> src() override;
+        MAC_ADDRESS src() override;
 
-        pair<const Byte *, size_t> dest() override;
+        MAC_ADDRESS dest() override;
 
         array<Byte, 2> lengthOrType() override;
 
@@ -47,7 +47,7 @@ namespace vl::core {
 
     private:
 
-        unique_ptr<const vector <Byte>> _data;
+        const vector<Byte> &_data;
 
 
     };

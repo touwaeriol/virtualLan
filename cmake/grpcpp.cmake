@@ -6,7 +6,10 @@ FetchContent_Declare(
         GIT_TAG        v1.46.2
 )
 set(FETCHCONTENT_QUIET OFF)
+set(ABSL_PROPAGATE_CXX_STD ON)
+
 FetchContent_MakeAvailable(gRPC)
+
 
 
 set(GRPCPP_LIB_NAME grpc++)

@@ -4,6 +4,10 @@
 
 #include <vl/core.h>
 
+#include <utility>
+
+#include <utility>
+
 #include "ethernet/EthernetAddressManager.h"
 #include "exception/AddressAlreadyInUseException.h"
 #include "exception/AddressPoolFullException.h"
@@ -14,18 +18,24 @@ using namespace vl::server;
 
 
 vl::server::EthernetAddressManager::EthernetAddressManager(
-        pair<vl::core::IPV4_ADDRESS, vl::core::IPV4_ADDRESS> ipRange,
-        pair<vl::core::IPV6_ADDRESS, vl::core::IPV6_ADDRESS> ipv6Range) : _ipRange(ipRange), _ipv6Range(ipv6Range),
-                                                                          _useIpv6(true) {
+        const pair<vl::core::IPV4_ADDRESS, vl::core::IPV4_ADDRESS> &ipRange,
+        const pair<vl::core::IPV6_ADDRESS, vl::core::IPV6_ADDRESS> &ipv6Range) : _ipRange(ipRange),
+                                                                                 _ipv6Range(ipv6Range),
+                                                                                 _useIpv6(true) {
 }
 
 vl::server::EthernetAddressManager::EthernetAddressManager(
-        pair<std::string, std::string> ipRange,
-        pair<std::string, std::string> ipv6Range) : _useIpv6(true) {
-    this->_ipRange.first = ipStrToAddr(ipRange.first);
-    this->_ipRange.second = ipStrToAddr(ipRange.second);
-    this->_ipv6Range.second = ipv6StrToAddr(ipv6Range.second);
-    this->_ipv6Range.second = ipv6StrToAddr(ipv6Range.second);
+        const pair<std::string, std::string> &ipRange,
+        const pair<std::string, std::string> &ipv6Range) : _useIpv6(true),
+                                                           _ipRange(
+                                                                   std::pair<vl::core::IPV4_ADDRESS, vl::core::IPV4_ADDRESS>(
+                                                                           ipStrToAddr(ipRange.first),
+                                                                           ipStrToAddr(ipRange.second))),
+                                                           _ipv6Range(
+                                                                   std::pair<vl::core::IPV6_ADDRESS, vl::core::IPV6_ADDRESS>(
+                                                                           (ipv6StrToAddr(ipv6Range.second)),
+                                                                           ipv6StrToAddr(ipv6Range.second))) {
+
 }
 
 vl::server::EthernetAddressManager::EthernetAddressManager(
@@ -33,43 +43,28 @@ vl::server::EthernetAddressManager::EthernetAddressManager(
 }
 
 vl::server::EthernetAddressManager::EthernetAddressManager(
-        pair<std::string, std::string> ipRange) : _useIpv6(false) {
-    this->_ipRange.first = ipStrToAddr(ipRange.first);
-    this->_ipRange.second = ipStrToAddr(ipRange.second);
+        const pair<std::string, std::string> &ipRange) : _useIpv6(false), _ipRange(
+        std::pair<vl::core::IPV4_ADDRESS, vl::core::IPV4_ADDRESS>(
+                ipStrToAddr(ipRange.first),
+                ipStrToAddr(ipRange.second))) {
 }
 
 std::shared_ptr<Device> vl::server::EthernetAddressManager::allocDevice() {
-    //加锁
-    MutexGuard guard{_mutex};
-
     auto device = std::make_shared<Device>();
     device->set_ip(ipAddrToStr(allocIp()));
     device->set_mac(macAddrToStr(allocMac()));
     device->set_mtu(VL_TAP_MAX_MTU);
     device->set_ipnetmask(24);
-
-    _macDeviceMap.emplace(macStrToAddr(device->mac()), device);
     return device;
 }
 
 bool vl::server::EthernetAddressManager::macInUse(vl::core::MAC_ADDRESS addr) const {
-    auto it = this->_allocedMac.find(addr);
-    auto end = this->_allocedMac.cend();
-    if (it == end) {
-        return false;
-    } else {
-        for (; it != end; ++it) {
-            if (addressEquals<MAC_ADDRESS>(addr, *it)) {
-                return true;
-            }
-        }
-    }
-    return false;
+    return _allocedMac.contains(addr);
 }
 
 MAC_ADDRESS vl::server::EthernetAddressManager::allocMac(vl::core::MAC_ADDRESS expect) {
     MAC_ADDRESS c;
-    if (addressEquals<MAC_ADDRESS>(expect, EMPTY_MAC)) {
+    if (addressEquals<MAC_LEN>(expect, EMPTY_MAC)) {
         c = nextMac();
     } else {
         //手动分配
@@ -85,23 +80,13 @@ MAC_ADDRESS vl::server::EthernetAddressManager::allocMac(vl::core::MAC_ADDRESS e
 }
 
 bool EthernetAddressManager::ipInUse(vl::core::IPV4_ADDRESS addr) const {
-    auto it = this->_allocedIp.find(addr);
-    auto end = this->_allocedIp.cend();
-    if (it == end) {
-        return false;
-    } else {
-        for (; it != end; ++it) {
-            if (vl::core::addressEquals<IPV4_ADDRESS>(addr, *it)) {
-                return true;
-            }
-        }
-    }
-    return false;
+
+    return this->_allocedIp.contains(addr);
 }
 
 IPV4_ADDRESS EthernetAddressManager::allocIp(vl::core::IPV4_ADDRESS expect) {
     IPV4_ADDRESS c;
-    if (addressEquals<IPV4_ADDRESS>(expect, EMPTY_IP)) {
+    if (addressEquals<IPV4_LEN>(expect, EMPTY_IP)) {
         c = nextIp();
     } else {
         //手动分配
@@ -117,31 +102,20 @@ IPV4_ADDRESS EthernetAddressManager::allocIp(vl::core::IPV4_ADDRESS expect) {
 }
 
 bool EthernetAddressManager::ipv6InUse(vl::core::IPV6_ADDRESS addr) const {
-    auto it = this->_allocedIpv6.find(addr);
-    auto end = this->_allocedIpv6.cend();
-    if (it == end) {
-        return false;
-    } else {
-        for (; it != end; ++it) {
-            if (vl::core::addressEquals<IPV6_ADDRESS>(addr, *it)) {
-                return true;
-            }
-        }
-    }
-    return false;
+
+    return this->_allocedIpv6.contains(addr);
 }
 
-std::pair<bool,string>  EthernetAddressManager::setDeviceUdpPort(MAC_ADDRESS mac, uint32 port) {
-    auto block = MutexGuard(_mutex);
-    auto it = _macDeviceMap.find(mac);
-    if(port == 0){
+std::pair<bool, string> EthernetAddressManager::setDeviceUdpPort(MAC_ADDRESS mac, uint32_t port) {
+    auto it = _macDeviceMap[mac];
+    if (port == 0) {
         return {false, "错误的端口，端口必须大于0"};
     }
-    if(it == _macDeviceMap.end()){
-        it->second->set_publicudpport(port);
-        return {true,""};
-    }else{
-        return {false,"mac地址不存在"};
+    if (it == nullptr) {
+        it->set_publicudpport(port);
+        return {true, ""};
+    } else {
+        return {false, "mac地址不存在"};
     }
 }
 
@@ -150,22 +124,23 @@ std::pair<bool,string>  EthernetAddressManager::setDeviceUdpPort(MAC_ADDRESS mac
       * @param mac
       * @return
       */
-std::optional<pair<IPV4_ADDRESS,uint32>> EthernetAddressManager::getDevicePublicAddr(MAC_ADDRESS mac){
-    auto mutex = MutexGuard(_mutex);
+std::optional<pair<IPV4_ADDRESS, uint32_t>> EthernetAddressManager::getDevicePublicAddr(MAC_ADDRESS mac) {
 
-
-
-
-
+    auto device = _macDeviceMap[mac];
+    if (device == nullptr) {
+        return {};
+    } else {
+        return {pair<IPV4_ADDRESS, uint32_t>(ipStrToAddr(device->publicip()), device->publicudpport())};
+    }
 }
 
 IPV6_ADDRESS EthernetAddressManager::allocIpv6(vl::core::IPV6_ADDRESS expect) {
     IPV6_ADDRESS c;
-    if (addressEquals<IPV6_ADDRESS>(expect, EMPTY_IPV6)) {
+    if (addressEquals<IPV6_LEN>(expect, EMPTY_IPV6)) {
         Random r(1);
         do {
             for (int i = 0; i < IPV4_LEN; ++i) {
-                uint32 n1 = r.next(), n2 = r.next();
+                uint32_t n1 = r.next(), n2 = r.next();
                 memcpy(&n1, &c[0], 4);
                 memcpy(&n2, &c[0] + 4, 2);
             }
@@ -185,7 +160,7 @@ IPV6_ADDRESS EthernetAddressManager::allocIpv6(vl::core::IPV6_ADDRESS expect) {
 
 
 /*static*/
-IPV4_ADDRESS vl::server::EthernetAddressManager::ipStrToAddr(std::string add) {
+IPV4_ADDRESS vl::server::EthernetAddressManager::ipStrToAddr(const std::string &add) {
     IPV4_ADDRESS r;
     auto sp = str::split(add, '.');
     for (int i = 0; i < IPV4_LEN; i++) {
@@ -196,10 +171,10 @@ IPV4_ADDRESS vl::server::EthernetAddressManager::ipStrToAddr(std::string add) {
 
 /*static*/
 std::string vl::server::EthernetAddressManager::ipAddrToStr(IPV4_ADDRESS add) {
-    auto s1 = str::from(static_cast<uint32>(add[0]));
-    auto s2 = str::from(static_cast<uint32>(add[1]));
-    auto s3 = str::from(static_cast<uint32>(add[2]));
-    auto s4 = str::from(static_cast<uint32>(add[3]));
+    auto s1 = str::from(static_cast<uint32_t>(add[0]));
+    auto s2 = str::from(static_cast<uint32_t>(add[1]));
+    auto s3 = str::from(static_cast<uint32_t>(add[2]));
+    auto s4 = str::from(static_cast<uint32_t>(add[3]));
     std::string r = std::string();
     r.resize(s1.size() + s2.size() + s3.size() + s4.size() + 3, '\0');
     int index = 0;
@@ -220,7 +195,7 @@ std::string vl::server::EthernetAddressManager::ipAddrToStr(IPV4_ADDRESS add) {
 }
 
 /*static*/
-IPV6_ADDRESS vl::server::EthernetAddressManager::ipv6StrToAddr(std::string add) {
+IPV6_ADDRESS vl::server::EthernetAddressManager::ipv6StrToAddr(const std::string &add) {
     IPV6_ADDRESS r;
     auto sp = str::split(add, '.');
     for (int i = 0; i < IPV6_LEN; i++) {
@@ -266,7 +241,7 @@ std::string vl::server::EthernetAddressManager::ipv6AddrToStr(IPV6_ADDRESS add) 
 
 
 /*static*/
-MAC_ADDRESS EthernetAddressManager::macStrToAddr(std::string add) {
+MAC_ADDRESS EthernetAddressManager::macStrToAddr(const std::string &add) {
     MAC_ADDRESS r;
     auto x = string("");
     auto sp = str::split(add, ':');
@@ -321,13 +296,14 @@ IPV4_ADDRESS EthernetAddressManager::nextIp() const {
     auto s = _ipRange.first;
     auto e = _ipRange.second;
     IPV4_ADDRESS nIp;
-    uint32 offset = 0;
+    uint32_t offset = 0;
     do {
         if (nIp == e) {
             throw AddressPoolFullException("ipv4地址已经被分配完了，无法继续分配");
         }
-        uint32 next = (static_cast<uint32>(s[0]) << 24) + (static_cast<uint32>(s[1]) << 16) + (static_cast<uint32>(s[2])
-                << 8) + (static_cast<uint32>(s[3]) << 0) + offset;
+        uint32_t next =
+                (static_cast<uint32_t>(s[0]) << 24) + (static_cast<uint32_t>(s[1]) << 16) + (static_cast<uint32_t>(s[2])
+                        << 8) + (static_cast<uint32_t>(s[3]) << 0) + offset;
         nIp[0] = static_cast<Byte> (next >> 24);
         nIp[1] = static_cast<Byte> (next >> 16);
         nIp[2] = static_cast<Byte> (next >> 8);
@@ -340,15 +316,14 @@ IPV4_ADDRESS EthernetAddressManager::nextIp() const {
 
 MAC_ADDRESS EthernetAddressManager::nextMac() const {
     MAC_ADDRESS r;
-    Random rand;
     do {
-        uint32 randInt = rand.next();
+        uint32_t randInt = static_cast<uint32_t>(rand());
         // 第一个字节的最后一位必须是0 表示单播地址
         r[0] = static_cast<Byte>(randInt) & 0b11111110;
         r[1] = static_cast<Byte>(randInt >> 8);
         r[2] = static_cast<Byte>(randInt >> 16);
         r[3] = static_cast<Byte>(randInt >> 24);
-        randInt = rand.next();
+        randInt = static_cast<uint32_t>(rand());
         r[4] = static_cast<Byte>(randInt);
         r[5] = static_cast<Byte>(randInt >> 8);
     } while (macInUse(r));

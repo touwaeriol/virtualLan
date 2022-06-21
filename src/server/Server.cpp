@@ -4,6 +4,8 @@
 
 #include "Server.h"
 
+#include <asio.hpp>
+
 vl::server::Server::Server(const string &listenHost, int listenPort, const pair<string, string> &ipRange, int netmask,
                            size_t dataQueueCap, int mtu)
         : _listenHost(listenHost), _listenPort(listenPort), _ipRange(ipRange), _netmask(netmask),
@@ -16,18 +18,10 @@ void vl::server::Server::init() {
     _register = make_shared<RegisterServiceImpl>(_ipRange.first, _ipRange.second, _netmask);
     _builder.RegisterService(_register.get());
     _builder.AddListeningPort(_listenHost + ":" + to_string(_listenPort), grpc::InsecureServerCredentials(), nullptr);
-
     DLOG << "初始化udpsocket";
-    _udpSock = co::udp_socket();
-    if (_udpSock == -1) {
-        FLOG << " 创建udp socket失败";
-    }
-    auto ok = co::init_ip_addr(&_addr, _listenHost.c_str(), _listenPort);
-    if (!ok) {
-        FLOG << "udp socket绑定地址失败, code = " << co::error() << " ,message = " << co::strerror(co::error());
-    }
+    _udpServerSock = std::make_shared<asio::ip::udp::socket>(*this->_udpContext);
     DLOG << "初始化数据队列";
-    _dataQueue = moodycamel::BlockingReaderWriterCircularBuffer<std::unique_ptr<vector<Byte>>>(1024);
+    _dataQueue = moodycamel::BlockingReaderWriterCircularBuffer<std::unique_ptr<EtherData>>(1024);
 
 }
 
@@ -35,10 +29,13 @@ pair<bool, string> vl::server::Server::start() {
     DLOG << "启动 grpc 服务器";
     _grpcServer = _builder.BuildAndStart();
     DLOG << "udp绑定地址";
-    auto code = co::bind(_udpSock, &_addr, sizeof(sockaddr_in));
-    if (code == -1) {
-        FLOG << "绑定本地udp端口失败";
+    auto endpoint = asio::ip::udp::endpoint(asio::ip::make_address_v4("0.0.0.0"), _listenPort);
+    try {
+        _udpServerSock->bind(endpoint);
+    } catch (const asio::system_error &err) {
+        FLOG << "绑定本地udp端口失败:" << err.what();
     }
+
     DLOG << "监听 udp数据";
     loopUdpData();
     return {true, ""};
@@ -65,54 +62,29 @@ void vl::server::Server::setNetmask(int netmask) {
     _netmask = netmask;
 }
 
-void vl::server::Server::initUdpSocket() {
-    _udpSock = co::udp_socket();
-    if (_udpSock == -1) {
-        FLOG << " 创建udp socket失败";
-    }
-    sockaddr_in addr{};
-    auto ok = co::init_ip_addr(&addr, _listenHost.c_str(), sizeof(addr));
-    if (!ok) {
-        FLOG << "udp socket绑定地址失败, code = " << co::error() << " ,message = " << co::strerror(co::error());
-    }
-    auto code = co::bind(_udpSock, &addr, sizeof(addr));
-    if (code == -1) {
-        FLOG << "绑定本地udp端口失败";
-    }
-}
 
 void vl::server::Server::loopUdpData() {
     //使用协程接收数据
-    co::go([this]() -> void {
-        auto buf = std::make_unique<EtherData>();
+    vl::core::co([this]() -> void {
+        asio::error_code errorCode;
         while (true) {
-            buf->_data.resize(_mtu);
-            int addrLen = sizeof(sockaddr_in);
-            auto code = co::recvfrom(_udpSock, buf->_data.data(), static_cast<int>(buf->_data.size()), &buf->peer,
-                                     &addrLen);
-            switch (code) {
-                case -1 : {
-                    FLOG << "接收数据错误";
-
-                    break;
-                }
-                case 0: {
-                    FLOG << "socket已经关闭";
-
-                    break;
-                }
-                default : {
-                    buf->_data.resize(code);
-                    _dataQueue.try_enqueue(std::move(buf));
-                }
+            auto buf = std::make_unique<EtherData>();
+            buf->_content.resize(_mtu);
+            asio::mutable_buffer asioBuf = asio::buffer(buf->_content);
+            auto len = _udpServerSock->receive_from(asioBuf, buf->_peer, 0, errorCode);
+            buf->_content.resize(len);
+            if (!errorCode) {
+                FLOG << "接收数据错误 : " << errorCode.message();
+            } else {
+                _dataQueue.try_enqueue(std::move(buf));
             }
         }
     });
     //使用线程处理数据
-    _dataHandler = std::make_unique<Thread>([this]() -> void {
+    _dataHandler = std::make_unique<std::thread>([this]() -> void {
         auto data = std::unique_ptr<EtherData>();
         _dataQueue.wait_dequeue(data);
-        co::go([this, data{move(data)}]() -> void {
+        vl::core::co([this, data{move(data)}]() -> void {
             //处理数据
             this->onReceiveData(*data);
         });
@@ -120,16 +92,15 @@ void vl::server::Server::loopUdpData() {
 }
 
 void vl::server::Server::onReceiveData(const EtherData &data) {
-    auto type = vl::core::Frame::frameType(data._data);
-    if (data._data.size() >= 42) {
-        switch (data._data.size()) {
+    if (data._content.size() < 42) {
+        switch (data._content.size()) {
             case MAC_LEN : {
                 std::array<Byte, MAC_LEN> mac{};
-                memcpy(mac.data(), data._data.data(), MAC_LEN);
+                memcpy(mac.data(), data._content.data(), MAC_LEN);
                 //找到了设备
-                auto result = _register->_manager.setDeviceUdpPort(mac, ntoh32(data.peer.sin_port));
+                auto result = _register->_manager.setDeviceUdpPort(mac, data._peer.port());
                 if (!result.first) {
-                    WLOG << "mac 地址 " << (EthernetAddressManager::macAddrToStr(mac)) << result.second;
+                    WLOG << "mac 地址 " << (EthernetAddressManager::macAddrToStr(mac)) << " 记录失败：" << result.second;
                 }
                 break;
             }
@@ -139,16 +110,27 @@ void vl::server::Server::onReceiveData(const EtherData &data) {
             }
         }
     } else {
-        switch (type) {
+        switch (vl::core::Frame::frameType(data._content)) {
             case core::ETHERNET_V2: {
-                EthernetV2Frame frame{data._data};
+                EthernetV2Frame frame{data._content};
                 auto dest = frame.dest();
                 // 如果第一个字节的最低位是1，则是多播？不然就是单播
-                auto broadcast = (dest.first[0] & 0x01) == 0x01;
+                auto broadcast = (dest[0] & 0x01) == 0x01;
                 if (broadcast) {
 
                 } else {
-                    _register->_manager.
+                    auto destAddr = _register->_manager.getDevicePublicAddr(dest);
+                    asio::error_code errorCode;
+                    if (destAddr.has_value()) {
+                        auto buf = asio::buffer(data._content);
+                        asio::ip::udp::endpoint destEp(asio::ip::address(
+                                                               asio::ip::make_address(EthernetAddressManager::ipAddrToStr(destAddr->first))),
+                                                       destAddr->second);
+                        this->_udpServerSock->send_to(buf, destEp, 0, errorCode);
+                        if (!errorCode) {
+                            DLOG << "转发数据失败";
+                        }
+                    }
                 }
                 break;
             }

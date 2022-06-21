@@ -23,7 +23,10 @@ include(libtuntap)
 include(asio)
 include(stduuid)
 include(concurrentqueue)
-include(cocoyaxi)
+include(onetbb)
+include(googletest)
+include(spdlog)
+include(gflags)
 
 
 SET(LIBS
@@ -32,20 +35,26 @@ SET(LIBS
         ${ASIO_LIB_NAME}
         ${STDUUID_LIB_NAME}
         ${CONCURRENTQUEUE_LIB_NAME}
-        ${COCOYAXI_LIB_NAME}
-
+        ${GOOGLETEST_LIB_NAME}
+        ${SPDLOG_LIB_NAME}
+        ${GFLAGS_LIB_NAME}
         )
+target_link_libraries(${TARGET_NAME} SHARED ${LIBS})
+
+
 SET(INCLUDES
         ${GRPCPP_LIB_INCLUDE}
         ${ASIO_LIB_INCLUDE}
         ${STDUUID_LIB_INCLUDE}
         ${LIBTUNTAP_LIB_INCLUDE}
         ${CONCURRENTQUEUE_LIB_INCLUDE}
-        ${COCOYAXI_LIB_INCLUDE}
-
+        ${ONETBB_LIB_INCLUDE}
+        ${GOOGLETEST_LIB_INCLUDE}
+        ${SPDLOG_LIB_INCLUDE}
+        ${GFLAGS_LIB_INCLUDE}
         )
-target_link_libraries(${TARGET_NAME} ${LIBS})
 target_include_directories(${TARGET_NAME}
         PUBLIC
         ${INCLUDES}
         )
+

@@ -3,7 +3,7 @@
 //
 
 #include <stdint.h>
-#include <co/byte_order.h>
+#include <util/netByteOrder.h>
 #include <netinet/in.h>
 
 #include "network/Frame.h"

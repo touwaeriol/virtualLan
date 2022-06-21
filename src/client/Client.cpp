@@ -58,10 +58,9 @@ namespace vl::client {
             FLOG << "初始化本地 udp地址 失败";
         }
         DLOG << "创建sock";
-        _sock = co::udp_socket();
-        if (_sock == -1) {
-            FLOG << "创建sock失败";
-        }
+        _udpSock = asio::ip::udp::socket(_udpContext);
+        _localAddr = asio::ip::udp::endpoint(asio::ip::make_address("0.0.0.0"), _udpPort);
+        _serverAddr = asio::ip::udp::endpoint(asio::ip::make_address(_grpcServerHost), _grpcServerPort);
 
     }
 
@@ -80,13 +79,14 @@ namespace vl::client {
         DLOG << "启用tap设备";
         _tap.name("vl-adapter0");
         _tap.ip(_device.ip(), static_cast<int>(_device.ipnetmask()));
-        _tap.hwaddr(_device.mac().c_str());
+        _tap.hwaddr(_device.mac());
         _tap.mtu(static_cast<int >(_device.mtu()));
         _tap.up();
         DLOG << "UDP绑定本地端口服务";
-        auto code = co::bind(_sock, &_localAddr, sizeof(sockaddr_in));
-        if (code == -1) {
-            FLOG << "socket 绑定本地端口" << to_string(_udpPort) << "失败" << co::strerror(co::error());
+        asio::error_code errorCode;
+        _udpSock.bind(_localAddr, errorCode);
+        if (!errorCode) {
+            FLOG << "绑带本地端口失败";
         }
         DLOG << "转发tap设备的流量";
         loopUdpData();
@@ -108,7 +108,7 @@ namespace vl::client {
 
     void Client::loopUdpData() {
         //专门的读取数据线程
-        _dataReader = make_unique<Thread>([this]() -> void {
+        _dataReader = make_unique<std::thread>([this]() -> void {
             size_t len;
             auto mtu = this->_device.mtu();
             while (true) {
@@ -135,7 +135,7 @@ namespace vl::client {
             }
         });
         //处理数据的线程
-        _dataHandler = make_unique<Thread>([this]() -> void {
+        _dataHandler = make_unique<std::thread>([this]() -> void {
             while (true) {
                 auto data = std::make_unique<vector<Byte>>();
                 _dataQueue.wait_dequeue(data);
@@ -146,15 +146,15 @@ namespace vl::client {
             }
         });
         //循环发送心跳数据包（一个字节的数据包为心跳数据包）
-        co::go([this]() -> void {
+        vl::core::co([this]() -> void {
             while (true) {
-                auto code = co::sendto(_sock, HEART_BEAT_PACKAGE.data(), static_cast<int>( HEART_BEAT_PACKAGE.size()),
-                                       &_serverAddr,
-                                       sizeof(sockaddr_in));
-                if (code == -1) {
+                auto buf = asio::buffer(HEART_BEAT_PACKAGE);
+                asio::error_code errorCode;
+                auto len = _udpSock.send_to(buf, _serverAddr, 0, errorCode);
+                if (errorCode) {
                     FLOG << "数据传输失败";
-                } else if (code != HEART_BEAT_PACKAGE.size()) {
-                    DLOG << "数据一共 " << HEART_BEAT_PACKAGE.size() << "字节" << " ,发送了" << code << "字节";
+                } else if (len != HEART_BEAT_PACKAGE.size()) {
+                    DLOG << "数据一共 " << HEART_BEAT_PACKAGE.size() << "字节" << " ,发送了" << len << "字节";
                 }
                 co::sleep(1000);
             }
@@ -163,11 +163,13 @@ namespace vl::client {
 
 
     void Client::onReceiveData(const vector<Byte> &data) {
-        auto code = co::sendto(_sock, data.data(), static_cast<int >(data.size()), &_serverAddr, sizeof(sockaddr_in));
-        if (code == -1) {
+        auto buf = asio::buffer(data);
+        asio::error_code errorCode;
+        auto len = _udpSock.send_to(buf, _serverAddr, 0, errorCode);
+        if (!errorCode) {
             FLOG << "数据传输失败";
-        } else if (code != data.size()) {
-            DLOG << "数据一共 " << data.size() << "字节" << " ,发送了" << code << "字节";
+        } else if (len != data.size()) {
+            DLOG << "数据一共 " << data.size() << "字节" << " ,发送了" << len << "字节";
         } else {
             DLOG << "转发数据完成";
         }

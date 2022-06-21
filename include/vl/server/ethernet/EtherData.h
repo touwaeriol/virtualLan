@@ -21,9 +21,9 @@ namespace vl::core {
 
     public:
 
-        std::vector<Byte> _data;
+        std::vector<Byte> _content;
 
-        sockaddr_in peer;
+        asio::ip::udp::endpoint _peer;
 
     };
 

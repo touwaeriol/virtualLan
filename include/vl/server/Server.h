@@ -10,6 +10,7 @@
 #include <utility>
 #include <string>
 #include <memory>
+#include <atomic>
 
 
 #include "service/RegisterServiceImpl.h"
@@ -56,7 +57,7 @@ namespace vl::server {
 
 
     private:
-        void initUdpSocket();
+
 
         void loopUdpData();
 
@@ -73,17 +74,17 @@ namespace vl::server {
 
         grpc::ServerBuilder _builder;
 
-        shared_ptr<grpc::Server> _grpcServer;
+        std::shared_ptr<grpc::Server> _grpcServer;
 
         shared_ptr<RegisterServiceImpl> _register;
 
-        sock_t _udpSock;
+        std::shared_ptr<asio::io_context> _udpContext;
 
-        sockaddr_in _addr;
+        std::shared_ptr<asio::ip::udp::socket> _udpServerSock;
 
         moodycamel::BlockingReaderWriterCircularBuffer<std::unique_ptr<EtherData>> _dataQueue;
 
-        std::unique_ptr<Thread> _dataHandler;
+        std::unique_ptr<std::thread> _dataHandler;
 
         void onReceiveData(const EtherData &data);
     };

@@ -13,8 +13,7 @@ using namespace vl::client;
 using namespace vl::core;
 
 
-
-DEF_main(argc, argv) {
+int main(int argc, char **argv) {
     // 设置co日志输出;
     log::set_single_write_cb(console_log_writer);
 
@@ -30,7 +29,7 @@ DEF_main(argc, argv) {
 
 
     DLOG << "创建客户端";
-    Client client(serverHost, serverPort, udpPort,1024,tapName);
+    Client client(serverHost, serverPort, udpPort, 1024, tapName);
 
     client.init();
 

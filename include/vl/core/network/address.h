@@ -25,17 +25,23 @@ using namespace std;
 
 namespace vl::core {
 
+    template<int T> using BYTE_ARRAY = array<Byte, T>;
 
-    template<size_t LEN>
+
+    template<size_t LENGTH>
     class AddressHasher;
 
-    template<typename T>
+    template<size_t LENGTH>
     class AddressEquals;
 
-    template<typename T>
-    bool addressEquals(const T &v1, const T &v2);
+    template<size_t LENGTH>
+    bool addressEquals(const BYTE_ARRAY<LENGTH> &v1, const BYTE_ARRAY<LENGTH> &v2);
 
-    template<int T> using BYTE_ARRAY = array<Byte, T>;
+    template<size_t LENGTH>
+    size_t addressHash(const BYTE_ARRAY<LENGTH> &addr);
+
+    template<size_t LENGTH>
+    class AddressHashCompare;
 
     typedef BYTE_ARRAY<IPV4_LEN> IPV4_ADDRESS;
     typedef BYTE_ARRAY<IPV6_LEN> IPV6_ADDRESS;
@@ -46,29 +52,48 @@ namespace vl::core {
     class AddressHasher {
     public:
         size_t operator()(const BYTE_ARRAY<LENGTH> &bytes) const {
-            size_t hash = 0;
-            for (int i = 0; i < LENGTH; ++i) {
-                hash = hash * 31 + bytes[i];
-            }
-            return hash;
+            return addressHash(bytes);
         }
     };
 
 
-    template<typename T>
-    class AddressEquals{
+    template<size_t LENGTH>
+    class AddressEquals {
     public:
-        bool operator()(const T &v1, const T &v2) const{
-            return addressEquals<T>(v1, v2);
+        bool operator()(const BYTE_ARRAY<LENGTH> &v1, const BYTE_ARRAY<LENGTH> &v2) const {
+            return addressEquals<LENGTH>(v1, v2);
         }
     };
 
+    template<size_t LENGTH>
+    size_t addressHash(const BYTE_ARRAY<LENGTH> &addr) {
+        size_t hash = 0;
+        for (int i = 0; i < LENGTH; ++i) {
+            hash = hash * 31 + addr[i];
+        }
+        return hash;
+    }
 
-    template<typename T>
-    bool addressEquals(const T &v1, const T &v2) {
+
+    template<size_t LENGTH>
+    bool addressEquals(const BYTE_ARRAY<LENGTH> &v1, const BYTE_ARRAY<LENGTH> &v2) {
         return memcmp(&v1[0], &v2[0], v1.size()) == 0;
     }
 
+
+    template<size_t LENGTH>
+    class AddressHashCompare {
+    public:
+        size_t hash(const BYTE_ARRAY<LENGTH> &bytes) const {
+            return addressHash(bytes);
+        }
+
+        bool equals(const BYTE_ARRAY<LENGTH> &v1, const BYTE_ARRAY<LENGTH> &v2) {
+            return addressEquals(v1, v2);
+        }
+
+
+    };
 }
 
 

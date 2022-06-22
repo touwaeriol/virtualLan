@@ -7,11 +7,11 @@
 
 namespace vl::core {
 
-    void initLog() {
-
+    std::shared_ptr<spdlog::logger> initLog() noexcept {
+        return std::make_shared<spdlog::logger>("console");
     }
 
 
-    const spdlog::logger CONSOLE = spdlog::logger("console");
+    std::shared_ptr<spdlog::logger> CONSOLE = initLog();
 
 }

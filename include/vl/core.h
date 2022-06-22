@@ -22,7 +22,8 @@
 
 #include <asio.hpp>
 
-#include "core/log/consoleLog.h"
+#include "core/log/log.h"
+
 #include "core/rpc/RegisterService.grpc.pb.h"
 
 #include "core/network/address.h"
@@ -35,7 +36,7 @@
 #include "core/util/typeDefile.h"
 #include "core/util/RequestIdGenerator.h"
 #include "core/util/Uncopymovable.hpp"
-
+#include "core/util/strUtil.h"
 #include "core/exception/exception.h"
 
 

@@ -5,6 +5,7 @@
 #include <vl/core.h>
 
 #include <utility>
+#include <random>
 
 #include <utility>
 
@@ -137,10 +138,9 @@ std::optional<pair<IPV4_ADDRESS, uint32_t>> EthernetAddressManager::getDevicePub
 IPV6_ADDRESS EthernetAddressManager::allocIpv6(vl::core::IPV6_ADDRESS expect) {
     IPV6_ADDRESS c;
     if (addressEquals<IPV6_LEN>(expect, EMPTY_IPV6)) {
-        Random r(1);
         do {
             for (int i = 0; i < IPV4_LEN; ++i) {
-                uint32_t n1 = r.next(), n2 = r.next();
+                uint32_t n1 = static_cast<uint32_t>(rand()), n2 = static_cast<uint32_t>( rand());
                 memcpy(&n1, &c[0], 4);
                 memcpy(&n2, &c[0] + 4, 2);
             }
@@ -244,7 +244,7 @@ std::string vl::server::EthernetAddressManager::ipv6AddrToStr(IPV6_ADDRESS add) 
 MAC_ADDRESS EthernetAddressManager::macStrToAddr(const std::string &add) {
     MAC_ADDRESS r;
     auto x = string("");
-    auto sp = str::split(add, ':');
+    auto sp = vl::core::split(add, ":");
     for (int i = 0; i < MAC_LEN; i++) {
         auto s = sp[i];
         if (s.size() > 1) {
@@ -317,7 +317,8 @@ IPV4_ADDRESS EthernetAddressManager::nextIp() const {
 MAC_ADDRESS EthernetAddressManager::nextMac() const {
     MAC_ADDRESS r;
     do {
-        uint32_t randInt = static_cast<uint32_t>(rand());
+        std::random_device rand{};
+        auto randInt = static_cast<uint32_t>(rand());
         // 第一个字节的最后一位必须是0 表示单播地址
         r[0] = static_cast<Byte>(randInt) & 0b11111110;
         r[1] = static_cast<Byte>(randInt >> 8);

@@ -41,23 +41,23 @@ namespace vl::client {
 
 
     void Client::init() {
-        DLOG << "创建通道";
+        DLOG("创建通道");
         _channel = grpc::CreateChannel(_grpcServerHost + ":" + to_string(_grpcServerPort),
                                        grpc::InsecureChannelCredentials());
-        DLOG << "创建注册 stub";
+        DLOG("创建注册 stub");
         _register_stub = make_shared<RegisterService::Stub>(_channel);
-        DLOG << "初始化同步";
+        DLOG("初始化同步");
         _syncEvent.reset();
-        DLOG << "初始化socket地址";
+        DLOG("初始化socket地址");
         auto ok = co::init_ip_addr(&_serverAddr, _grpcServerHost.c_str(), _grpcServerPort);
         if (!ok) {
-            FLOG << "初始化服务器 udp地址 失败";
+            FLOG("初始化服务器 udp地址 失败");
         }
         ok = co::init_ip_addr(&_localAddr, "0.0.0.0", _udpPort);
         if (!ok) {
-            FLOG << "初始化本地 udp地址 失败";
+            FLOG("初始化本地 udp地址 失败");
         }
-        DLOG << "创建sock";
+        DLOG("创建sock");
         _udpSock = asio::ip::udp::socket(_udpContext);
         _localAddr = asio::ip::udp::endpoint(asio::ip::make_address("0.0.0.0"), _udpPort);
         _serverAddr = asio::ip::udp::endpoint(asio::ip::make_address(_grpcServerHost), _grpcServerPort);
@@ -65,32 +65,32 @@ namespace vl::client {
     }
 
     pair<bool, string> Client::start() {
-        DLOG << "注册设备";
+        DLOG("注册设备");
         RegisterRequest request;
         RegisterResponse response;
         request.set_allocated_status(newRequestCode().release());
         auto status = _register_stub->registe(&_context, request, &response);
         if (!status.ok()) {
-            ELOG << "获取设备信息失败";
+            ELOG("获取设备信息失败");
             return {false, "获取设备信息失败"};
         }
-        DLOG << "得到设备信息";
+        DLOG("得到设备信息");
         _device.CopyFrom(response.device());
-        DLOG << "启用tap设备";
+        DLOG("启用tap设备");
         _tap.name("vl-adapter0");
         _tap.ip(_device.ip(), static_cast<int>(_device.ipnetmask()));
         _tap.hwaddr(_device.mac());
         _tap.mtu(static_cast<int >(_device.mtu()));
         _tap.up();
-        DLOG << "UDP绑定本地端口服务";
+        DLOG("UDP绑定本地端口服务");
         asio::error_code errorCode;
         _udpSock.bind(_localAddr, errorCode);
         if (!errorCode) {
-            FLOG << "绑带本地端口失败";
+            FLOG("绑带本地端口失败");
         }
-        DLOG << "转发tap设备的流量";
+        DLOG("转发tap设备的流量");
         loopUdpData();
-        DLOG << "完成";
+        DLOG("完成");
         return {true, ""};
     }
 
@@ -118,9 +118,9 @@ namespace vl::client {
                 if (len == -1) {
                     auto errorCode = errno;
                     auto errorMessage = strerror(errorCode);
-                    FLOG << "tap设备异常，socket发生错误 : error = " << errorCode << ", message = " << errorMessage;
+                    CLOG(std::string("tap设备异常，socket发生错误 : error = ") + to_string(errorCode )+ ", message = " + errorMessage);
                 } else if (len == 0) {
-                    FLOG << "tap 设备 EOF";
+                    CLOG("tap 设备 EOF");
                 } else {
                     //长度与实际长度一致
                     if (data->size() != len) {
@@ -128,9 +128,9 @@ namespace vl::client {
                     }
                     auto ok = _dataQueue.try_enqueue(std::move(data));
                     if (!ok) {
-                        DLOG << "数据处理失败,丢失该数据 len = " << len;
+                        DLOG("数据处理失败,丢失该数据 len = ")<< len;
                     }
-                    DLOG << "收到数据,已加入队列";
+                    DLOG("收到数据,已加入队列");
                 }
             }
         });
@@ -152,9 +152,9 @@ namespace vl::client {
                 asio::error_code errorCode;
                 auto len = _udpSock.send_to(buf, _serverAddr, 0, errorCode);
                 if (errorCode) {
-                    FLOG << "数据传输失败";
+                    FLOG("数据传输失败");
                 } else if (len != HEART_BEAT_PACKAGE.size()) {
-                    DLOG << "数据一共 " << HEART_BEAT_PACKAGE.size() << "字节" << " ,发送了" << len << "字节";
+                    DLOG("数据一共 ")<< HEART_BEAT_PACKAGE.size() << "字节" << " ,发送了" << len << "字节";
                 }
                 co::sleep(1000);
             }
@@ -167,11 +167,11 @@ namespace vl::client {
         asio::error_code errorCode;
         auto len = _udpSock.send_to(buf, _serverAddr, 0, errorCode);
         if (!errorCode) {
-            FLOG << "数据传输失败";
+            FLOG("数据传输失败");
         } else if (len != data.size()) {
-            DLOG << "数据一共 " << data.size() << "字节" << " ,发送了" << len << "字节";
+            DLOG("数据一共 ")<< data.size() << "字节" << " ,发送了" << len << "字节";
         } else {
-            DLOG << "转发数据完成";
+            DLOG("转发数据完成");
         }
     }
 

@@ -15,10 +15,6 @@ using namespace vl::server;
 
 
 int main(int argc, char **argv) {
-    log::set_single_write_cb(vl::core::console_log_writer);
-
-    unitest::run_all_tests();
-
 
     auto listenHost = "0.0.0.0";
     auto listenPort = 5200;

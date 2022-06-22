@@ -14,29 +14,29 @@ vl::server::Server::Server(const string &listenHost, int listenPort, const pair<
 
 
 void vl::server::Server::init() {
-    DLOG << "初始化服务器";
+    DLOG("初始化服务器");
     _register = make_shared<RegisterServiceImpl>(_ipRange.first, _ipRange.second, _netmask);
     _builder.RegisterService(_register.get());
     _builder.AddListeningPort(_listenHost + ":" + to_string(_listenPort), grpc::InsecureServerCredentials(), nullptr);
-    DLOG << "初始化udpsocket";
+    DLOG("初始化udpsocket");
     _udpServerSock = std::make_shared<asio::ip::udp::socket>(*this->_udpContext);
-    DLOG << "初始化数据队列";
+    DLOG("初始化数据队列");
     _dataQueue = moodycamel::BlockingReaderWriterCircularBuffer<std::unique_ptr<EtherData>>(1024);
 
 }
 
 pair<bool, string> vl::server::Server::start() {
-    DLOG << "启动 grpc 服务器";
+    DLOG("启动 grpc 服务器");
     _grpcServer = _builder.BuildAndStart();
-    DLOG << "udp绑定地址";
+    DLOG("udp绑定地址");
     auto endpoint = asio::ip::udp::endpoint(asio::ip::make_address_v4("0.0.0.0"), _listenPort);
     try {
         _udpServerSock->bind(endpoint);
     } catch (const asio::system_error &err) {
-        FLOG << "绑定本地udp端口失败:" << err.what();
+        CLOG(std::string("绑定本地udp端口失败: ") + err.what());
     }
 
-    DLOG << "监听 udp数据";
+    DLOG("监听 udp数据");
     loopUdpData();
     return {true, ""};
 }
@@ -74,7 +74,7 @@ void vl::server::Server::loopUdpData() {
             auto len = _udpServerSock->receive_from(asioBuf, buf->_peer, 0, errorCode);
             buf->_content.resize(len);
             if (!errorCode) {
-                FLOG << "接收数据错误 : " << errorCode.message();
+                FLOG("接收数据错误 : ") << errorCode.message();
             } else {
                 _dataQueue.try_enqueue(std::move(buf));
             }
@@ -100,7 +100,7 @@ void vl::server::Server::onReceiveData(const EtherData &data) {
                 //找到了设备
                 auto result = _register->_manager.setDeviceUdpPort(mac, data._peer.port());
                 if (!result.first) {
-                    WLOG << "mac 地址 " << (EthernetAddressManager::macAddrToStr(mac)) << " 记录失败：" << result.second;
+                    WLOG("mac 地址 ")<< (EthernetAddressManager::macAddrToStr(mac)) << " 记录失败：" << result.second;
                 }
                 break;
             }
@@ -128,14 +128,14 @@ void vl::server::Server::onReceiveData(const EtherData &data) {
                                                        destAddr->second);
                         this->_udpServerSock->send_to(buf, destEp, 0, errorCode);
                         if (!errorCode) {
-                            DLOG << "转发数据失败";
+                            DLOG("转发数据失败");
                         }
                     }
                 }
                 break;
             }
             default: {
-                DLOG << "不能识别的数据格式";
+                DLOG("不能识别的数据格式");
                 break;
             }
         }

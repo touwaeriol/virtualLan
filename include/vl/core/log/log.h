@@ -9,26 +9,25 @@
 #include <spdlog/spdlog.h>
 #include <spdlog/fmt/ostr.h>
 
-#define TLOG(msg,...) spdlog::trace(msg,...)
-#define TLOG(msg) spdlog::trace(msg)
-#define DLOG(msg,...) spdlog::debug(msg,...)
-#define DLOG(msg) spdlog::debug(msg)
-#define ILOG(msg,...) spdlog::info(msg,...)
-#define ILOG(msg) spdlog::info(msg)
-#define WLOG(msg,...) spdlog::warn(msg,...)
-#define WLOG(msg) spdlog::warn(msg)
-#define ELOG(msg,...) spdlog::error(msg,...)
-#define ELOG(msg) spdlog::error(msg)
-#define CLOG(msg,...) spdlog::critical(msg,...)
-#define CLOG(msg) spdlog::critical(msg)
+#define TLOG(msg, ...) spdlog::trace(msg,...);
+#define TLOG(msg) spdlog::trace(msg);
+#define DLOG(msg, ...) spdlog::debug(msg,...);
+#define DLOG(msg) spdlog::debug(msg);
+#define ILOG(msg, ...) spdlog::info(msg,...);
+#define ILOG(msg) spdlog::info(msg);
+#define WLOG(msg, ...) spdlog::warn(msg,...);
+#define WLOG(msg) spdlog::warn(msg);
+#define ELOG(msg, ...) spdlog::error(msg,...);
+#define ELOG(msg) spdlog::error(msg);
+#define CLOG(msg, ...) spdlog::critical(msg,...);
+#define CLOG(msg) spdlog::critical(msg);
 
 
+namespace vl::core {
 
-namespace vl::core{
+    std::shared_ptr<spdlog::logger> initLog() noexcept;
 
-   void initLog();
-
-   extern const spdlog::logger CONSOLE;
+    extern std::shared_ptr<spdlog::logger> CONSOLE;
 
 
 }

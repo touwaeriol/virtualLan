@@ -11,5 +11,5 @@ FetchContent_MakeAvailable(googletest)
 
 
 set(GOOGLETEST_LIB_NAME googletest)
-set(GOOGLETEST_LIB_INCLUDE ${CMAKE_BINARY_DIR}/_deps/googletest-src/include)
+set(GOOGLETEST_LIB_INCLUDE ${CMAKE_BINARY_DIR}/_deps/googletest-src/googletest/include)
 

@@ -14,7 +14,6 @@
 
 
 #include "service/RegisterServiceImpl.h"
-#include "ethernet/EtherData.h"
 
 using namespace std;
 using namespace vl::core;
@@ -82,7 +81,7 @@ namespace vl::server {
 
         std::shared_ptr<asio::ip::udp::socket> _udpServerSock;
 
-        moodycamel::BlockingReaderWriterCircularBuffer<std::unique_ptr<EtherData>> _dataQueue;
+        moodycamel::BlockingReaderWriterCircularBuffer<EtherData> _dataQueue;
 
         std::unique_ptr<std::thread> _dataHandler;
 

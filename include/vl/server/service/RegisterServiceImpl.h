@@ -36,9 +36,9 @@ namespace vl::server {
 
         EthernetAddressManager _manager;
 
-        uint32 _netmask;
+        uint32_t _netmask;
 
-        uint32 mtu;
+        uint32_t mtu;
 
     };
 }

@@ -6,8 +6,12 @@
 #define VIRTUALLAN_ETHERDATA_H
 
 #include <memory>
-#include <co/all.h>
+#include <vector>
+#include <asio.hpp>
+
 #include "util/typeDefile.h"
+
+
 namespace vl::core {
 
     class EtherData;

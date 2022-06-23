@@ -8,8 +8,12 @@
 #include <vector>
 #include "util/typeDefile.h"
 
-namespace vl::core{
+
+namespace vl::core {
     using namespace std;
+
+#define VL_HEART_BEAT_PACKAGE_SIZE 1
+
 
     //心跳数据包
     [[maybe_unused]] extern const vector<Byte> HEART_BEAT_PACKAGE;

@@ -6,9 +6,6 @@ set(TARGET_NAME core)
 FILE(GLOB_RECURSE SOURCES ./*.cpp  ./*.cc)
 
 
-
-
-
 message("core_source " ${SOURCES})
 
 
@@ -39,7 +36,7 @@ SET(LIBS
         ${SPDLOG_LIB_NAME}
         ${GFLAGS_LIB_NAME}
         )
-target_link_libraries(${TARGET_NAME} SHARED ${LIBS})
+target_link_libraries(${TARGET_NAME} ${LIBS})
 
 
 SET(INCLUDES

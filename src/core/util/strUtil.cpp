@@ -7,7 +7,7 @@
 
 namespace vl::core {
 
-    inline std::vector<std::string> compact(const std::vector<std::string> &tokens) {
+    std::vector<std::string> compact(const std::vector<std::string> &tokens) {
         std::vector<std::string> compacted;
         for (size_t i = 0; i < tokens.size(); ++i) {
             if (!tokens[i].empty()) {
@@ -17,7 +17,7 @@ namespace vl::core {
         return compacted;
     }
 
-    inline std::vector<std::wstring> compact(const std::vector<std::wstring> &tokens) {
+    std::vector<std::wstring> compact(const std::vector<std::wstring> &tokens) {
         std::vector<std::wstring> compacted;
         for (size_t i = 0; i < tokens.size(); ++i) {
             if (!tokens[i].empty()) {
@@ -27,7 +27,7 @@ namespace vl::core {
         return compacted;
     }
 
-    inline std::vector<std::string> split(const std::string &str, const std::string &delim, const bool trim_empty) {
+    std::vector<std::string> split(const std::string &str, const std::string &delim, const bool trim_empty) {
         size_t pos, last_pos = 0, len;
         std::vector<std::string> tokens;
         while (true) {
@@ -48,7 +48,7 @@ namespace vl::core {
         return tokens;
     }
 
-    inline std::vector<std::wstring>
+    std::vector<std::wstring>
     split(const std::wstring &str, const std::wstring &delim, const bool trim_empty) {
         size_t pos, last_pos = 0, len;
         std::vector<std::wstring> tokens;
@@ -70,7 +70,7 @@ namespace vl::core {
         return tokens;
     }
 
-    inline std::string join(const std::vector<std::string> &tokens, const std::string &delim, const bool trim_empty) {
+    std::string join(const std::vector<std::string> &tokens, const std::string &delim, const bool trim_empty) {
         if (trim_empty) {
             return join(compact(tokens), delim, false);
         } else {
@@ -83,7 +83,7 @@ namespace vl::core {
         }
     }
 
-    inline std::wstring
+    std::wstring
     join(const std::vector<std::wstring> &tokens, const std::wstring &delim, const bool trim_empty) {
         if (trim_empty) {
             return join(compact(tokens), delim, false);
@@ -97,7 +97,7 @@ namespace vl::core {
         }
     }
 
-    inline std::string trim(const std::string &str) {
+    std::string trim(const std::string &str) {
         if (str.empty()) {
             return str;
         }
@@ -112,7 +112,7 @@ namespace vl::core {
         return sstr;
     }
 
-    inline std::wstring trim(const std::wstring &str) {
+    std::wstring trim(const std::wstring &str) {
         if (str.empty()) {
             return str;
         }
@@ -127,7 +127,7 @@ namespace vl::core {
         return sstr;
     }
 
-    inline std::string repeat(const std::string &str, unsigned int times) {
+    std::string repeat(const std::string &str, unsigned int times) {
         std::stringstream ss;
         for (unsigned int i = 0; i < times; ++i) {
             ss << str;
@@ -135,7 +135,7 @@ namespace vl::core {
         return ss.str();
     }
 
-    inline std::wstring repeat(const std::wstring &str, unsigned int times) {
+    std::wstring repeat(const std::wstring &str, unsigned int times) {
         std::wstringstream ss;
         for (unsigned int i = 0; i < times; ++i) {
             ss << str;
@@ -143,7 +143,7 @@ namespace vl::core {
         return ss.str();
     }
 
-    inline std::string Toupper(const std::string &str) {
+    std::string Toupper(const std::string &str) {
         if (str.empty()) {
             return str;
         }
@@ -152,7 +152,7 @@ namespace vl::core {
         return s;
     }
 
-    inline std::wstring Toupper(const std::wstring &str) {
+    std::wstring Toupper(const std::wstring &str) {
         if (str.empty()) {
             return str;
         }
@@ -161,7 +161,7 @@ namespace vl::core {
         return s;
     }
 
-    inline std::string Tolower(const std::string &str) {
+    std::string Tolower(const std::string &str) {
         if (str.empty()) {
             return str;
         }
@@ -170,7 +170,7 @@ namespace vl::core {
         return s;
     }
 
-    inline std::wstring Tolower(const std::wstring &str) {
+    std::wstring Tolower(const std::wstring &str) {
         if (str.empty()) {
             return str;
         }
@@ -179,7 +179,7 @@ namespace vl::core {
         return s;
     }
 
-    inline std::string replace(const std::string &source, const std::string &target, const std::string &replacement) {
+    std::string replace(const std::string &source, const std::string &target, const std::string &replacement) {
         std::string s(source);
         std::string::size_type pos = 0;
         std::string::size_type srclen = target.size();
@@ -191,7 +191,7 @@ namespace vl::core {
         return s;
     }
 
-    inline std::wstring
+    std::wstring
     replace(const std::wstring &source, const std::wstring &target, const std::wstring &replacement) {
         std::wstring s(source);
         std::wstring::size_type pos = 0;
@@ -204,7 +204,7 @@ namespace vl::core {
         return s;
     }
 
-    inline std::string between(const std::string &str, const std::string &left, const std::string &right) {
+    std::string between(const std::string &str, const std::string &left, const std::string &right) {
         size_t left_pos, right_pos, last_pos = 0;
         left_pos = str.find(left, last_pos);
         if (left_pos == std::string::npos)
@@ -216,7 +216,7 @@ namespace vl::core {
         return str.substr(left_pos + left.size(), right_pos - left_pos - left.size());
     }
 
-    inline std::wstring between(const std::wstring &str, const std::wstring &left, const std::wstring &right) {
+    std::wstring between(const std::wstring &str, const std::wstring &left, const std::wstring &right) {
         size_t left_pos, right_pos, last_pos = 0;
         left_pos = str.find(left, last_pos);
         if (left_pos == std::wstring::npos)
@@ -228,7 +228,7 @@ namespace vl::core {
         return str.substr(left_pos + left.size(), right_pos - left_pos - left.size());
     }
 
-    inline std::vector<std::string>
+    std::vector<std::string>
     between_array(const std::string &str, const std::string &left, const std::string &right, const bool trim_empty) {
         size_t left_pos, right_pos, last_pos = 0, len;
         std::vector<std::string> result;
@@ -252,7 +252,7 @@ namespace vl::core {
         return result;
     }
 
-    inline std::vector<std::wstring>
+    std::vector<std::wstring>
     between_array(const std::wstring &str, const std::wstring &left, const std::wstring &right, const bool trim_empty) {
         size_t left_pos, right_pos, last_pos = 0, len;
         std::vector<std::wstring> result;
@@ -276,7 +276,7 @@ namespace vl::core {
         return result;
     }
 
-    inline std::string left(const std::string &str, const std::string &left) {
+    std::string left(const std::string &str, const std::string &left) {
         std::string s(str);
         size_t pos, last_pos = 0;
         pos = s.find(left, last_pos);
@@ -286,7 +286,7 @@ namespace vl::core {
             return std::string();
     }
 
-    inline std::wstring left(const std::wstring &str, const std::wstring &left) {
+    std::wstring left(const std::wstring &str, const std::wstring &left) {
         std::wstring s(str);
         size_t pos, last_pos = 0;
         pos = s.find(left, last_pos);
@@ -296,7 +296,7 @@ namespace vl::core {
             return std::wstring();
     }
 
-    inline std::string right(const std::string &str, const std::string &right) {
+    std::string right(const std::string &str, const std::string &right) {
         std::string s(str);
         size_t pos, last_pos = 0;
         pos = s.find(right, last_pos);
@@ -307,7 +307,7 @@ namespace vl::core {
             return std::string();
     }
 
-    inline std::wstring right(const std::wstring &str, const std::wstring &right) {
+    std::wstring right(const std::wstring &str, const std::wstring &right) {
         std::wstring s(str);
         size_t pos, last_pos = 0;
         pos = s.find(right, last_pos);
@@ -318,19 +318,19 @@ namespace vl::core {
             return std::wstring();
     }
 
-    inline bool is_start_with(const std::string &str, const std::string &src) {
+    bool is_start_with(const std::string &str, const std::string &src) {
         return str.compare(0, src.length(), src) == 0;
     }
 
-    inline bool is_start_with(const std::wstring &str, const std::wstring &src) {
+    bool is_start_with(const std::wstring &str, const std::wstring &src) {
         return str.compare(0, src.length(), src) == 0;
     }
 
-    inline bool is_end_with(const std::string &str, const std::string &src) {
+    bool is_end_with(const std::string &str, const std::string &src) {
         return str.compare(str.length() - src.length(), src.length(), src) == 0;
     }
 
-    inline bool is_end_with(const std::wstring &str, const std::wstring &src) {
+    bool is_end_with(const std::wstring &str, const std::wstring &src) {
         return str.compare(str.length() - src.length(), src.length(), src) == 0;
     }
 };

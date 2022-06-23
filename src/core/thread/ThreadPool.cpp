@@ -3,61 +3,71 @@
 //
 
 #include "thread/ThreadPool.h"
+#include "log/log.h"
 
 #include <utility>
 
 namespace vl::core {
-
-
-    ThreadPool::ThreadPool(size_t taskQueueCap, size_t threadCount) :
-            _taskQueueCap(taskQueueCap),
-            _taskQueue(taskQueueCap),
-            _threadQueue(threadCount),
-            _threadCount(threadCount),
-            _stop(false) {
-        if (_threadCount == 0) {
-            _threadCount = std::thread::hardware_concurrency() * 2;
+    ThreadPool::ThreadPool(size_t tasks, size_t works) : _stop(false), _tasks(
+            moodycamel::BlockingConcurrentQueue<std::function<void()>>(tasks)) {
+        if (works == 0) {
+            works = std::thread::hardware_concurrency() * 2;
+        }
+        for (size_t i = 0; i < works; ++i) {
+            //创建工作线程
+            std::thread worker = std::thread([this]() -> void {
+                std::function<void()> task;
+                for (;;) {
+                    if (_stop) {
+                        break;
+                    }
+                    _tasks.wait_dequeue(task);
+                    task();
+                }
+            });
+            //将工作线程加入线程组
+            _workers.try_enqueue(std::move(worker));
         }
     }
+
+
+    std::pair<bool, std::string> ThreadPool::execute(std::function<void()> &&f) {
+        // don't allow enqueueing after stopping the pool
+        if (_stop) {
+            return {false, "线程池已经停止"};
+        }
+        auto ok = _tasks.try_enqueue([f(std::move(f))]() -> void {
+            f();
+        });
+        if (ok) {
+            return {true, ""};
+        } else {
+            return {false, "任务队列已满，无法添加"};
+        }
+    }
+
+    std::pair<bool, std::string> ThreadPool::operator()(std::function<void()> &&f) {
+        return execute(std::move(f));
+    }
+
 
     ThreadPool::~ThreadPool() {
-
-    }
-
-    std::pair<bool, std::string> ThreadPool::execute(std::function<void()> f) {
-        //如果线程数量没有达到最大，则新建线程
-        if (_threadQueue.size_approx() < _threadCount) {
-            auto ok = _threadQueue.try_enqueue(std::thread([this]() -> void {
-                Closure f;
-                while (true) {
-                    _taskQueue.wait_dequeue(f);
-                    try {
-                        f.run();
-                    } catch (std::exception &e) {
-                        ELOG << "任务抛出异常： " << e.what();
-                    }
-                }
-            }));
-            if (!ok) {
-                return std::pair<bool, std::string>{false, "线程创建失败"};
+        if (!_stop) {
+            _stop = true;
+        }
+        auto size = _workers.size_approx();
+        std::thread work;
+        for (int i = 0; i < size; ++i) {
+            _workers.wait_dequeue(work);
+            if (work.joinable()) {
+                work.join();
             }
         }
-        _taskQueue.try_enqueue(Closure(std::move(f)));
-
     }
-
 
     ThreadPool GLOBE_POOL(1000);
 
-
-    std::pair<bool, std::string> co(std::function<void()> f) {
+    std::pair<bool, std::string> co(std::function<void()> &&f) {
         return GLOBE_POOL.execute(std::move(f));
-    }
-
-    template<typename F>
-    std::pair<bool, std::string> co(F &&f) {
-        return GLOBE_POOL.execute([fp(f)]() -> void {
-            fp();
-        });
     }
 }

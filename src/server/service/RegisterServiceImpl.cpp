@@ -32,7 +32,7 @@ namespace vl::server {
         auto clientId = request->status().clientid();
         std::string peer = context->peer();
 
-        auto ips = str::split(peer, ":");
+        auto ips = vl::core::split(peer, ":");
         auto clientHost = ips[1];
         auto clientPort = ips[2];
         auto status = std::make_unique<vl::core::ResponseCode>();
@@ -47,7 +47,7 @@ namespace vl::server {
         auto deviceCopy = make_unique<Device>();
         deviceCopy->CopyFrom(*device);
         deviceCopy->set_clientid(clientId);
-        deviceCopy->set_publicip(str::split(context->peer().c_str(),':')[1].c_str());
+        deviceCopy->set_publicip(vl::core::split(context->peer().c_str(),":")[1].c_str());
         deviceCopy->set_group("default");
 
 

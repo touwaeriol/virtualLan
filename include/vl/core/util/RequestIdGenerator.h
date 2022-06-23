@@ -9,7 +9,6 @@
 #include <string>
 #include <sstream>
 #include <memory>
-#include <co/co.h>
 #include <uuid.h>
 
 using namespace std;

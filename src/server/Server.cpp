@@ -9,7 +9,7 @@
 vl::server::Server::Server(const string &listenHost, int listenPort, const pair<string, string> &ipRange, int netmask,
                            size_t dataQueueCap, int mtu)
         : _listenHost(listenHost), _listenPort(listenPort), _ipRange(ipRange), _netmask(netmask),
-          _dataQueue(moodycamel::BlockingReaderWriterCircularBuffer<std::unique_ptr<EtherData>>(dataQueueCap)),
+          _dataQueue(moodycamel::BlockingReaderWriterCircularBuffer<EtherData>(dataQueueCap)),
           _mtu(mtu) {}
 
 
@@ -21,7 +21,7 @@ void vl::server::Server::init() {
     DLOG("初始化udpsocket");
     _udpServerSock = std::make_shared<asio::ip::udp::socket>(*this->_udpContext);
     DLOG("初始化数据队列");
-    _dataQueue = moodycamel::BlockingReaderWriterCircularBuffer<std::unique_ptr<EtherData>>(1024);
+    _dataQueue = moodycamel::BlockingReaderWriterCircularBuffer<EtherData>(1024);
 
 }
 
@@ -68,13 +68,13 @@ void vl::server::Server::loopUdpData() {
     vl::core::co([this]() -> void {
         asio::error_code errorCode;
         while (true) {
-            auto buf = std::make_unique<EtherData>();
-            buf->_content.resize(_mtu);
-            asio::mutable_buffer asioBuf = asio::buffer(buf->_content);
-            auto len = _udpServerSock->receive_from(asioBuf, buf->_peer, 0, errorCode);
-            buf->_content.resize(len);
+            EtherData buf{};
+            buf._content.resize(_mtu);
+            asio::mutable_buffer asioBuf = asio::buffer(buf._content);
+            auto len = _udpServerSock->receive_from(asioBuf, buf._peer, 0, errorCode);
+            buf._content.resize(len);
             if (!errorCode) {
-                FLOG("接收数据错误 : ") << errorCode.message();
+                ELOG("接收数据错误 : " + errorCode.message());
             } else {
                 _dataQueue.try_enqueue(std::move(buf));
             }
@@ -82,11 +82,11 @@ void vl::server::Server::loopUdpData() {
     });
     //使用线程处理数据
     _dataHandler = std::make_unique<std::thread>([this]() -> void {
-        auto data = std::unique_ptr<EtherData>();
+        EtherData data{};
         _dataQueue.wait_dequeue(data);
-        vl::core::co([this, data{move(data)}]() -> void {
+        vl::core::co([this, data(std::move(data))]() -> void {
             //处理数据
-            this->onReceiveData(*data);
+            this->onReceiveData(data);
         });
     });
 }
@@ -94,13 +94,24 @@ void vl::server::Server::loopUdpData() {
 void vl::server::Server::onReceiveData(const EtherData &data) {
     if (data._content.size() < 42) {
         switch (data._content.size()) {
+            //客户端心跳数据包
+            case VL_HEART_BEAT_PACKAGE_SIZE : {
+                auto buf = asio::buffer(data._content);
+                asio::error_code errorCode;
+                _udpServerSock->send_to(buf, data._peer, 0, errorCode);
+                if (!errorCode) {
+                    WLOG("发送udp数据失败");
+                }
+                break;
+            }
+                //客户端上报公网port地址
             case MAC_LEN : {
                 std::array<Byte, MAC_LEN> mac{};
                 memcpy(mac.data(), data._content.data(), MAC_LEN);
                 //找到了设备
                 auto result = _register->_manager.setDeviceUdpPort(mac, data._peer.port());
                 if (!result.first) {
-                    WLOG("mac 地址 ")<< (EthernetAddressManager::macAddrToStr(mac)) << " 记录失败：" << result.second;
+                    WLOG("mac 地址 " + (EthernetAddressManager::macAddrToStr(mac)) + " 记录失败：" + result.second);
                 }
                 break;
             }

@@ -10,16 +10,30 @@
 #include "ethernet/EthernetAddressManager.h"
 #include "Server.h"
 
+
+DEFINE_string(listenHost, "0.0.0.0", "监听host");
+DEFINE_int32(listenPort, 5200, "监听端口");
+DEFINE_string(ipRange, "192.168.100.1-192.168.100.254", "ip范围");
+DEFINE_int32(netmask, 24, "子网掩码");
+
+
 using namespace vl::core;
 using namespace vl::server;
 
 
-int main(int argc, char **argv) {
+GTEST_API_ int main(int argc, char **argv) {
+    // 设置co日志输出;
+    initLog();
+    ::testing::InitGoogleTest(&argc, argv);//解析命令行中的GoogleTest参数，它允许用户通过多样的命令行参数来控制测试程序的行为（即定制命令行参数的行为）
+    //运行测试
+    auto code = RUN_ALL_TESTS();
 
-    auto listenHost = "0.0.0.0";
-    auto listenPort = 5200;
-    auto ipRange = pair<string, string>("192.168.100.1", "192.168.100.254");
-    auto netmask = 24;
+
+    auto listenHost = FLAGS_listenHost;
+    auto listenPort = FLAGS_listenPort;
+    auto range = vl::core::split(FLAGS_ipRange, "-");
+    auto ipRange = pair<string, string>(range[0], range[1]);
+    auto netmask = FLAGS_netmask;
     vl::server::Server server{listenHost, listenPort, ipRange, netmask};
 
     server.init();

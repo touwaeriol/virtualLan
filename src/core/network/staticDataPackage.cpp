@@ -4,6 +4,7 @@
 
 #include "network/staticDataPackage.h"
 
+
 namespace vl::core {
     using namespace std;
 
@@ -16,8 +17,8 @@ namespace vl::core {
 
 
     vector<Byte> heartBeatPackage() noexcept {
-        vector<Byte> data = vector<Byte>(1);
-        data.resize(1);
+        vector<Byte> data = vector<Byte>();
+        data.resize(VL_HEART_BEAT_PACKAGE_SIZE);
         return move(data);
     }
 

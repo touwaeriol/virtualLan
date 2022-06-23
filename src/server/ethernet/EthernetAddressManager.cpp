@@ -162,19 +162,19 @@ IPV6_ADDRESS EthernetAddressManager::allocIpv6(vl::core::IPV6_ADDRESS expect) {
 /*static*/
 IPV4_ADDRESS vl::server::EthernetAddressManager::ipStrToAddr(const std::string &add) {
     IPV4_ADDRESS r;
-    auto sp = str::split(add, '.');
+    auto sp = vl::core::split(add, ".");
     for (int i = 0; i < IPV4_LEN; i++) {
-        r[i] = static_cast<unsigned char >( str::to_int32(sp[i]));
+        r[i] = static_cast<unsigned char >(std::atoi(sp[i].c_str()));
     }
     return r;
 }
 
 /*static*/
 std::string vl::server::EthernetAddressManager::ipAddrToStr(IPV4_ADDRESS add) {
-    auto s1 = str::from(static_cast<uint32_t>(add[0]));
-    auto s2 = str::from(static_cast<uint32_t>(add[1]));
-    auto s3 = str::from(static_cast<uint32_t>(add[2]));
-    auto s4 = str::from(static_cast<uint32_t>(add[3]));
+    auto s1 = to_string(static_cast<uint32_t>(add[0]));
+    auto s2 = to_string(static_cast<uint32_t>(add[1]));
+    auto s3 = to_string(static_cast<uint32_t>(add[2]));
+    auto s4 = to_string(static_cast<uint32_t>(add[3]));
     std::string r = std::string();
     r.resize(s1.size() + s2.size() + s3.size() + s4.size() + 3, '\0');
     int index = 0;
@@ -197,21 +197,21 @@ std::string vl::server::EthernetAddressManager::ipAddrToStr(IPV4_ADDRESS add) {
 /*static*/
 IPV6_ADDRESS vl::server::EthernetAddressManager::ipv6StrToAddr(const std::string &add) {
     IPV6_ADDRESS r;
-    auto sp = str::split(add, '.');
+    auto sp = vl::core::split(add, ".");
     for (int i = 0; i < IPV6_LEN; i++) {
-        r[i] = static_cast<unsigned char >( str::to_int32(sp[i]));
+        r[i] = static_cast<unsigned char >( atoi(sp[i].c_str()));
     }
     return r;
 }
 
 /*static*/
 std::string vl::server::EthernetAddressManager::ipv6AddrToStr(IPV6_ADDRESS add) {
-    auto s1 = str::from(add[0]);
-    auto s2 = str::from(add[1]);
-    auto s3 = str::from(add[2]);
-    auto s4 = str::from(add[3]);
-    auto s5 = str::from(add[4]);
-    auto s6 = str::from(add[5]);
+    auto s1 = to_string(add[0]);
+    auto s2 = to_string(add[1]);
+    auto s3 = to_string(add[2]);
+    auto s4 = to_string(add[3]);
+    auto s5 = to_string(add[4]);
+    auto s6 = to_string(add[5]);
     std::string r = std::string();
     r.resize(s1.size() + s2.size() + s3.size() + s4.size() + 5, '\0');
     int index = 0;

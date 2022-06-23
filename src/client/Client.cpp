@@ -13,26 +13,33 @@ namespace vl::client {
     using namespace std;
 
 
-    Client::Client(const string &serverHost, int serverPort, int udpPort, size_t dataQueueCap,
-                   const string &tapName) : _grpcServerHost(
+    Client::Client(
+            const string &serverHost,
+            int serverPort,
+            int udpPort,
+            size_t dataQueueCap,
+            size_t udpQueueData,
+            const string &tapName
+    ) : _grpcServerHost(
             serverHost),
-                                            _grpcServerPort(
-                                                    serverPort),
-                                            _udpPort(
-                                                    udpPort),
-                                            _syncEvent(false,
-                                                       false),
-                                            _request_id_generator(
-                                                    RequestIdGenerator::defaultGenerator()),
-                                            _dataQueue(
-                                                    moodycamel::BlockingReaderWriterCircularBuffer<std::unique_ptr<vector<Byte>>>(
-                                                            dataQueueCap)),
-                                            _tapName(
-                                                    tapName) {
+        _grpcServerPort(
+                serverPort),
+        _udpPort(
+                udpPort),
+        _request_id_generator(
+                RequestIdGenerator::defaultGenerator()),
+        _tapDataQueue(
+                moodycamel::BlockingReaderWriterCircularBuffer<vector<Byte>>(
+                        dataQueueCap)),
+        _udpDataQueue(
+                moodycamel::BlockingReaderWriterCircularBuffer<vl::core::EtherData>(
+                        udpQueueData)),
+        _tapName(
+                tapName) {
     }
 
     Client::~Client() {
-        co::shutdown(_sock);
+        _udpSock->shutdown(asio::socket_base::shutdown_both);
     }
 
     void Client::operator()() {
@@ -46,21 +53,11 @@ namespace vl::client {
                                        grpc::InsecureChannelCredentials());
         DLOG("创建注册 stub");
         _register_stub = make_shared<RegisterService::Stub>(_channel);
-        DLOG("初始化同步");
-        _syncEvent.reset();
         DLOG("初始化socket地址");
-        auto ok = co::init_ip_addr(&_serverAddr, _grpcServerHost.c_str(), _grpcServerPort);
-        if (!ok) {
-            FLOG("初始化服务器 udp地址 失败");
-        }
-        ok = co::init_ip_addr(&_localAddr, "0.0.0.0", _udpPort);
-        if (!ok) {
-            FLOG("初始化本地 udp地址 失败");
-        }
-        DLOG("创建sock");
-        _udpSock = asio::ip::udp::socket(_udpContext);
-        _localAddr = asio::ip::udp::endpoint(asio::ip::make_address("0.0.0.0"), _udpPort);
         _serverAddr = asio::ip::udp::endpoint(asio::ip::make_address(_grpcServerHost), _grpcServerPort);
+        _localAddr = asio::ip::udp::endpoint(asio::ip::make_address("0.0.0."), _udpPort);
+        DLOG("创建sock");
+        _udpSock = std::make_unique<asio::ip::udp::socket>(_udpContext);
 
     }
 
@@ -84,9 +81,9 @@ namespace vl::client {
         _tap.up();
         DLOG("UDP绑定本地端口服务");
         asio::error_code errorCode;
-        _udpSock.bind(_localAddr, errorCode);
+        _udpSock->bind(_localAddr, errorCode);
         if (!errorCode) {
-            FLOG("绑带本地端口失败");
+            CLOG("绑带本地端口失败");
         }
         DLOG("转发tap设备的流量");
         loopUdpData();
@@ -95,7 +92,10 @@ namespace vl::client {
     }
 
     void Client::wait() {
-        _syncEvent.wait();
+        _tapDataReader->join();
+        _tapDataHandler->join();
+        _udpDataReceiver->join();
+        _beatHearthThread->join();
     }
 
 
@@ -107,74 +107,105 @@ namespace vl::client {
     }
 
     void Client::loopUdpData() {
-        //专门的读取数据线程
-        _dataReader = make_unique<std::thread>([this]() -> void {
+        //从tap读取数据
+        _tapDataReader = make_unique<std::thread>([this]() -> void {
             size_t len;
             auto mtu = this->_device.mtu();
             while (true) {
-                auto data = std::make_unique<vector<Byte>>();
-                data->resize(mtu);
-                len = this->_tap.read(data->data(), data->size());
+                vector<Byte> data;
+                data.resize(mtu);
+                len = this->_tap.read(data.data(), data.size());
                 if (len == -1) {
                     auto errorCode = errno;
                     auto errorMessage = strerror(errorCode);
-                    CLOG(std::string("tap设备异常，socket发生错误 : error = ") + to_string(errorCode )+ ", message = " + errorMessage);
+                    CLOG(std::string("tap设备异常，socket发生错误 : error = ") + to_string(errorCode) + ", message = " +
+                         errorMessage);
                 } else if (len == 0) {
                     CLOG("tap 设备 EOF");
                 } else {
                     //长度与实际长度一致
-                    if (data->size() != len) {
-                        data->resize(len);
+                    if (data.size() != len) {
+                        data.resize(len);
                     }
-                    auto ok = _dataQueue.try_enqueue(std::move(data));
+                    auto ok = _tapDataQueue.try_enqueue(std::move(data));
                     if (!ok) {
-                        DLOG("数据处理失败,丢失该数据 len = ")<< len;
+                        DLOG("数据处理失败,丢失该数据 len = " + to_string(len));
                     }
                     DLOG("收到数据,已加入队列");
                 }
             }
         });
-        //处理数据的线程
-        _dataHandler = make_unique<std::thread>([this]() -> void {
+        //处理从tap读取到的数据，通过udp发送出去
+        _tapDataHandler = make_unique<std::thread>([this]() -> void {
             while (true) {
-                auto data = std::make_unique<vector<Byte>>();
-                _dataQueue.wait_dequeue(data);
-                co::go([this, data{move(data)}]() mutable -> void {
+                auto data = vector<Byte>();
+                _tapDataQueue.wait_dequeue(data);
+                auto f = [this, data(std::move(data))]() -> void {
                     //处理数据
-                    this->onReceiveData(*data);
+                    this->onReadTapData(data);
+                };
+                vl::core::co(f);
+            }
+        });
+        //处理接收到的udp数据，写入到tap
+        _udpDataReceiver = make_unique<std::thread>([this]() -> void {
+            EtherData data{};
+            data._content.resize(_device.mtu());
+            auto buf = asio::buffer(data._content);
+            asio::error_code errorCode;
+            while (true) {
+                auto len = _udpSock->receive_from(buf, data._peer, 0, errorCode);
+                if (errorCode) {
+                    DLOG("获取udp数据失败");
+                }
+                data._content.resize(len);
+                auto ok = _udpDataQueue.try_enqueue(std::move(data));
+            }
+        });
+        //专门处理收到的udp数据
+        _udpDataHandler = make_unique<std::thread>([this]() -> void {
+            while (true) {
+                EtherData data{};
+                _udpDataQueue.wait_dequeue(data);
+                vl::core::co([this, data(move(data))]() -> void {
+                    //处理数据
+                    this->onReceiveUdpData(data);
                 });
             }
         });
         //循环发送心跳数据包（一个字节的数据包为心跳数据包）
-        vl::core::co([this]() -> void {
+        _beatHearthThread = make_unique<std::thread>([this]() -> void {
             while (true) {
-                auto buf = asio::buffer(HEART_BEAT_PACKAGE);
-                asio::error_code errorCode;
-                auto len = _udpSock.send_to(buf, _serverAddr, 0, errorCode);
-                if (errorCode) {
-                    FLOG("数据传输失败");
-                } else if (len != HEART_BEAT_PACKAGE.size()) {
-                    DLOG("数据一共 ")<< HEART_BEAT_PACKAGE.size() << "字节" << " ,发送了" << len << "字节";
-                }
-                co::sleep(1000);
+                vector<Byte> bytes{};
+                bytes = HEART_BEAT_PACKAGE;
+                _tapDataQueue.try_enqueue(std::move(bytes));
+                std::this_thread::sleep_for(5s);
             }
         });
     }
 
 
-    void Client::onReceiveData(const vector<Byte> &data) {
+    void Client::onReadTapData(const vector<Byte> &data) {
         auto buf = asio::buffer(data);
         asio::error_code errorCode;
-        auto len = _udpSock.send_to(buf, _serverAddr, 0, errorCode);
+        auto len = _udpSock->send_to(buf, _serverAddr, 0, errorCode);
         if (!errorCode) {
-            FLOG("数据传输失败");
+            CLOG("数据传输失败");
         } else if (len != data.size()) {
-            DLOG("数据一共 ")<< data.size() << "字节" << " ,发送了" << len << "字节";
+            DLOG(std::string("数据一共 ") + to_string(data.size()) + "字节" + " ,发送了" + to_string(len) + "字节");
         } else {
             DLOG("转发数据完成");
         }
     }
 
+
+    void Client::onReceiveUdpData(const vl::core::EtherData &data) {
+        if (data._content.size() < 42) {
+            //不是tap数据，忽略
+        } else {
+            _tap.write(static_cast<void *>(const_cast<Byte * >(data._content.data())), data._content.size());
+        }
+    }
 
     void Client::setTapName(const string &tapName) {
         _tapName = tapName;

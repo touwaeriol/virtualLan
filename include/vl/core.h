@@ -6,6 +6,8 @@
 #define VIRTUALLAN_CORE_H
 
 
+#include <cstdint>
+#include <cstdlib>
 
 #include <grpcpp/grpcpp.h>
 
@@ -13,9 +15,8 @@
 #include <blockingconcurrentqueue.h>
 #include <readerwriterqueue.h>
 #include <readerwritercircularbuffer.h>
-
-#include <cstdint>
-#include <cstdlib>
+#include <gflags/gflags.h>
+#include <gtest/gtest.h>
 
 
 #include <tbb/tbb.h>
@@ -30,6 +31,7 @@
 #include "core/network/Tap.h"
 #include "core/network/EthernetV2Frame.h"
 #include "core/network/staticDataPackage.h"
+#include "core/network/EtherData.h"
 
 
 #include "core/util/define.h"
@@ -41,7 +43,6 @@
 
 
 #include "thread/ThreadPool.h"
-
 
 
 #endif //VIRTUALLAN_CORE_H

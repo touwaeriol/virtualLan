@@ -6,9 +6,8 @@
 #define VIRTUALLAN_CLIENT_H
 
 #include <vl/core.h>
-
+#include <thread>
 #include "Client.h"
-
 
 
 namespace vl::client {
@@ -28,8 +27,14 @@ namespace vl::client {
 
     public:
 
-        Client(const string &serverHost, int serverPort, int udpPort, size_t dataQueueCap = 1024,
-               const string &tapName = "vl-adapter0");
+        Client(
+                const string &serverHost,
+                int serverPort,
+                int udpPort,
+                size_t dataQueueCap = 1024,
+                size_t udpQueueData = 1024,
+                const string &tapName = "vl-adapter0"
+        );
 
         ~Client() override;
 
@@ -50,11 +55,13 @@ namespace vl::client {
 
         void loopUdpData();
 
-        void onReceiveData(const vector<Byte> &data);
+        void onReadTapData(const vector<Byte> &data);
+
+        void onReceiveUdpData(const vl::core::EtherData &data);
 
 
     private:
-        SyncEvent _syncEvent;
+
 
         int _udpPort;
 
@@ -76,16 +83,25 @@ namespace vl::client {
 
         std::string _tapName;
 
-        unique_ptr<std::thread> _dataReader;
+        unique_ptr<std::thread> _tapDataReader;
 
-        unique_ptr<std::thread> _dataHandler;
+        unique_ptr<std::thread> _tapDataHandler;
 
-        moodycamel::BlockingReaderWriterCircularBuffer<std::unique_ptr<vector < Byte>>>_dataQueue;
+        unique_ptr<std::thread> _udpDataReceiver;
+
+        unique_ptr<std::thread> _udpDataHandler;
+
+        unique_ptr<std::thread> _beatHearthThread;
+
+        moodycamel::BlockingReaderWriterCircularBuffer<vector<Byte>>
+                _tapDataQueue;
+
+        moodycamel::BlockingReaderWriterCircularBuffer<vl::core::EtherData> _udpDataQueue;
 
         asio::io_context _udpContext;
-        asio::ip::udp::socket _udpSock;
-        asio::io::udp::endpoint _serverAddr;
-        asio::io::udp::endpoint _localAddr;
+        std::shared_ptr<asio::ip::udp::socket> _udpSock;
+        asio::ip::udp::endpoint _serverAddr;
+        asio::ip::udp::endpoint _localAddr;
 
     };
 

@@ -86,7 +86,8 @@ namespace vl::client {
         _tap->mtu(static_cast<int >(_device.mtu()));
         _tap->up();
         assert(_tap->name() == _tapName);
-
+        DLOG("打开socket")
+        _udpSock->open(boost::asio::ip::udp::v4());
         DLOG("UDP绑定本地端口服务");
         boost::system::error_code error;
         _udpSock->bind(_localAddr, error);

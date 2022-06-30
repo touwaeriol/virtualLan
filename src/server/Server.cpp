@@ -38,6 +38,8 @@ void vl::server::Server::init() {
 pair<bool, string> vl::server::Server::start() {
     DLOG("启动 grpc 服务器");
     _grpcServer = std::shared_ptr<grpc::Server>(_builder.BuildAndStart().release());
+    DLOG("打开socket");
+    _udpServerSock->open(boost::asio::ip::udp::v4());
     DLOG("udp绑定地址");
     auto endpoint = boost::asio::ip::udp::endpoint(boost::asio::ip::make_address_v4("0.0.0.0"), _listenPort);
     boost::system::error_code error;

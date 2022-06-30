@@ -2,7 +2,6 @@
 // Created by touwaerio on 2022/5/18.
 //
 
-
 #include <vl/core.h>
 #include <thread>
 #include "Server.h"
@@ -38,6 +37,7 @@ GTEST_API_ int main(int argc, char **argv) {
     auto ipRange = pair<string, string>(range[0], range[1]);
     auto netmask = FLAGS_netmask;
     vl::server::Server server{listenHost, listenPort, ipRange, netmask};
+
 
     server.init();
 

@@ -29,8 +29,6 @@ void vl::server::Server::init() {
     _builder.AddListeningPort(_listenHost + ":" + to_string(_listenPort), grpc::InsecureServerCredentials(), nullptr);
     DLOG("初始化udpsocket");
     _udpContext = std::make_shared<boost::asio::io_context>();
-
-
     _udpServerSock = std::make_shared<boost::asio::ip::udp::socket>(*this->_udpContext);
     DLOG("初始化数据队列");
     _dataQueue = moodycamel::BlockingReaderWriterCircularBuffer<EtherData>(1024);

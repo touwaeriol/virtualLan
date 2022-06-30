@@ -70,4 +70,5 @@ namespace vl::core {
     std::pair<bool, std::string> co(std::function<void()> &&f) {
         return GLOBE_POOL.execute(std::move(f));
     }
+
 }

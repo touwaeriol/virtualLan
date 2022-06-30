@@ -25,7 +25,6 @@ include(fmt)
 
 SET(LIBS
         ${GRPCPP_LIB_NAME}
-        ${ASIO_LIB_NAME}
         ${LIBTUNTAP_LIB_NAME}
         ${CONCURRENTQUEUE_LIB_NAME}
         ${GOOGLETEST_LIB_NAME}

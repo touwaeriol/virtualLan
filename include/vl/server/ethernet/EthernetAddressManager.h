@@ -29,23 +29,23 @@ namespace vl::server {
 
 
     public:
-        EthernetAddressManager(const pair<IPV4_ADDRESS, IPV4_ADDRESS> & ipRange,
-                              const pair<IPV6_ADDRESS, IPV6_ADDRESS>  &ipv6Range);
+        EthernetAddressManager(const pair<IPV4_ADDRESS, IPV4_ADDRESS> &ipRange,
+                               const pair<IPV6_ADDRESS, IPV6_ADDRESS> &ipv6Range);
 
 
-        EthernetAddressManager(const pair<std::string, std::string>& ipRange,
-                               const pair<std::string, std::string>& ipv6Range
+        EthernetAddressManager(const pair<std::string, std::string> &ipRange,
+                               const pair<std::string, std::string> &ipv6Range
         );
 
         EthernetAddressManager(pair<IPV4_ADDRESS, IPV4_ADDRESS> ipRange);
 
 
-        EthernetAddressManager(const pair<std::string, std::string>& ipRange);
+        EthernetAddressManager(const pair<std::string, std::string> &ipRange);
 
         ~EthernetAddressManager() override = default;
 
     public:
-        std::shared_ptr<Device> allocDevice();
+        std::shared_ptr<Device> allocDevice(const string & clientId,const string & publicId,const string & group);
 
 
         bool macInUse(MAC_ADDRESS addr) const;
@@ -56,21 +56,24 @@ namespace vl::server {
 
         bool ipv6InUse(IPV6_ADDRESS addr) const;
 
+        const tbb::concurrent_unordered_map<MAC_ADDRESS, std::shared_ptr<Device>, AddressHasher<6>, AddressEquals<6>> &
+        getMacDeviceMap() const;
 
     public:
 
-        static IPV4_ADDRESS ipStrToAddr(const std::string& add);
+        static IPV4_ADDRESS ipStrToAddr(const std::string &add);
 
         static std::string ipAddrToStr(IPV4_ADDRESS add);
 
 
-        static IPV6_ADDRESS ipv6StrToAddr(const std::string& add);
+        static IPV6_ADDRESS ipv6StrToAddr(const std::string &add);
 
         static std::string ipv6AddrToStr(IPV6_ADDRESS add);
 
         static std::string macAddrToStr(MAC_ADDRESS add);
 
-        static MAC_ADDRESS macStrToAddr(const std::string& add);
+        static MAC_ADDRESS macStrToAddr(const std::string &add);
+
 
     private:
 
@@ -141,8 +144,8 @@ namespace vl::server {
          * 客户端客户端id与虚拟ip的映射
          */
         oneapi::tbb::concurrent_unordered_map<MAC_ADDRESS /*mac*/, std::shared_ptr<Device>,
-                AddressHasher < MAC_LEN>, AddressEquals<MAC_LEN>> _macDeviceMap{
-            1024
+                AddressHasher<MAC_LEN>, AddressEquals<MAC_LEN>> _macDeviceMap{
+                1024
         };
 
 
@@ -150,24 +153,24 @@ namespace vl::server {
          * 已经分配的ip
          */
         oneapi::tbb::concurrent_unordered_set<IPV4_ADDRESS,
-                AddressHasher < IPV4_LEN>, AddressEquals<IPV4_LEN>> _allocedIp{
-            1024
+                AddressHasher<IPV4_LEN>, AddressEquals<IPV4_LEN>> _allocedIp{
+                1024
         };
 
         /**
          * 已经分配的ipv6
          */
         oneapi::tbb::concurrent_unordered_set<IPV6_ADDRESS,
-                AddressHasher < IPV6_LEN>, AddressEquals<IPV6_LEN>> _allocedIpv6{
-            1024
+                AddressHasher<IPV6_LEN>, AddressEquals<IPV6_LEN>> _allocedIpv6{
+                1024
         };
 
         /**
          * 已经分配的mac地址
          */
         oneapi::tbb::concurrent_unordered_set<MAC_ADDRESS,
-                AddressHasher < MAC_LEN>, AddressEquals<MAC_LEN>> _allocedMac{
-            1024
+                AddressHasher<MAC_LEN>, AddressEquals<MAC_LEN>> _allocedMac{
+                1024
         };
 
     };

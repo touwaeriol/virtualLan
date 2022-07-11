@@ -56,8 +56,9 @@ namespace vl::server {
 
     private:
 
-
         void loopUdpData();
+
+        void onReceiveData(const EtherData &data) noexcept;
 
     private:
         string _listenHost;
@@ -74,7 +75,7 @@ namespace vl::server {
 
         std::shared_ptr<grpc::Server> _grpcServer;
 
-        shared_ptr<RegisterServiceImpl> _register;
+        std::shared_ptr<EthernetAddressManager> _addressesManager;
 
         std::shared_ptr<boost::asio::io_context> _udpContext;
 
@@ -89,10 +90,10 @@ namespace vl::server {
 
         std::unique_ptr<std::thread> _dataHandler;
 
-        void onReceiveData(const EtherData &data);
-
         volatile bool _stop;
     };
+
+
 }
 
 

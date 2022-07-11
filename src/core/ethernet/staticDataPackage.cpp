@@ -2,7 +2,7 @@
 // Created by touwaerio on 2022/6/14.
 //
 
-#include "network/staticDataPackage.h"
+#include "etnernet/staticDataPackage.h"
 
 
 namespace vl::core {

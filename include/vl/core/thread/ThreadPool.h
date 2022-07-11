@@ -16,43 +16,25 @@
 #include <stdexcept>
 
 #include <blockingconcurrentqueue.h>
+#include <async++.h>
 
 #include "util/Uncopymovable.hpp"
 #include "log/log.h"
 
 
 namespace vl::core {
-    class ThreadPool;
+
+
 }
 
 
 namespace vl::core {
 
 
-    class ThreadPool {
-    public:
-        ThreadPool(size_t tasks, size_t works = 0);
-
-        std::pair<bool, std::string> execute(std::function<void()> &&f);
-
-        std::pair<bool, std::string> operator()(std::function<void()> &&f);
-
-
-        ~ThreadPool();
-
-    private:
-        // need to keep track of threads so we can join them
-        mutable moodycamel::BlockingConcurrentQueue<std::thread> _workers;
-        // the task queue
-        mutable moodycamel::BlockingConcurrentQueue<std::function<void()> > _tasks;
-
-        volatile bool _stop;
-    };
-
-
-    extern ThreadPool GLOBE_POOL;
-
-    std::pair<bool, std::string> co(std::function<void()> &&f);
+//    template<typename Func>
+//    auto co(Func &&f) {
+//        return async::spawn(f);
+//    }
 
 
 }

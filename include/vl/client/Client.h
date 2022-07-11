@@ -33,8 +33,9 @@ namespace vl::client {
                 int serverPort,
                 int udpPort,
                 size_t dataQueueCap = 1024,
-                size_t udpQueueData = 1024,
-                const string &tapName = "vl-adapter0"
+                size_t receivedUdpDataQueueCap = 1024,
+                size_t waitSendUdpDataQueueCap = 1024,
+                const string &tapName = "vltap0"
         );
 
         ~Client() override;
@@ -59,6 +60,8 @@ namespace vl::client {
         void onReadTapData(const vector<Byte> &data);
 
         void onReceiveUdpData(const vl::core::EtherData &data);
+
+        void sendUdpToServer(const vector<Byte> & data);
 
 
     private:
@@ -87,6 +90,8 @@ namespace vl::client {
 
         unique_ptr<std::thread> _tapDataHandler;
 
+        unique_ptr<std::thread> _udpDataSender;
+
         unique_ptr<std::thread> _udpDataReceiver;
 
         unique_ptr<std::thread> _udpDataHandler;
@@ -102,7 +107,13 @@ namespace vl::client {
         /**
          * 收到的udp数据
          */
-        moodycamel::BlockingReaderWriterCircularBuffer<vl::core::EtherData> _udpDataQueue;
+        moodycamel::BlockingReaderWriterCircularBuffer<vl::core::EtherData> _receivedUdpDataQueue;
+
+        /**
+         * 等待发送的udp数据队列
+         */
+        moodycamel::BlockingConcurrentQueue<vl::core::EtherData> _waitSendUdpDataQueue;
+
 
         boost::asio::io_context _udpContext;
         std::shared_ptr<boost::asio::ip::udp::socket> _udpSock;

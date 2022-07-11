@@ -6,7 +6,7 @@
 #include <util/netByteOrder.h>
 #include <netinet/in.h>
 
-#include "network/Frame.h"
+#include "etnernet/Frame.h"
 
 namespace vl::core {
 

@@ -9,7 +9,7 @@
 #include <array>
 
 #include "util/typeDefile.h"
-#include "network/address.h"
+#include "etnernet/address.h"
 
 
 namespace vl::core {

@@ -50,12 +50,17 @@ vl::server::EthernetAddressManager::EthernetAddressManager(
                 ipStrToAddr(ipRange.second))) {
 }
 
-std::shared_ptr<Device> vl::server::EthernetAddressManager::allocDevice() {
+std::shared_ptr<Device> vl::server::EthernetAddressManager::allocDevice(const string & clientId,const string & publicId,const string & group) {
     auto device = std::make_shared<Device>();
     device->set_ip(ipAddrToStr(allocIp()));
     device->set_mac(macAddrToStr(allocMac()));
     device->set_mtu(VL_TAP_MAX_MTU);
     device->set_ipnetmask(24);
+    //记录公网信息
+    device->set_clientid(clientId);
+    device->set_publicip(publicId);
+    device->set_group(group);
+    _macDeviceMap.emplace(macStrToAddr(device->mac()), device);
     return device;
 }
 
@@ -106,6 +111,12 @@ bool EthernetAddressManager::ipv6InUse(vl::core::IPV6_ADDRESS addr) const {
 
     return this->_allocedIpv6.contains(addr);
 }
+
+const tbb::concurrent_unordered_map<MAC_ADDRESS, std::shared_ptr<Device>, AddressHasher<6>, AddressEquals<6>> &
+EthernetAddressManager::getMacDeviceMap() const {
+    return _macDeviceMap;
+}
+
 
 std::pair<bool, string> EthernetAddressManager::setDeviceUdpPort(MAC_ADDRESS mac, uint32_t port) {
     auto it = _macDeviceMap[mac];
@@ -256,6 +267,8 @@ MAC_ADDRESS EthernetAddressManager::macStrToAddr(const std::string &add) {
     return r;
 }
 
+
+
 /*static*/
 std::string EthernetAddressManager::macAddrToStr(MAC_ADDRESS add) {
     auto s1 = add[0];
@@ -361,6 +374,8 @@ BYTE_ARRAY<2> EthernetAddressManager::byteToStrHex(Byte b) {
         return BYTE_ARRAY<2>{'0', s[0]};
     }
 }
+
+
 
 
 

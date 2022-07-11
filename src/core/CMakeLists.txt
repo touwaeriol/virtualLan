@@ -21,6 +21,9 @@ include(gflags)
 include(boost)
 include(onetbb)
 include(fmt)
+include(asyncpluscplus)
+include(kcp)
+include(yasio)
 
 
 SET(LIBS
@@ -35,6 +38,9 @@ SET(LIBS
         ${BOOST_ASIO_LIB_NAME}
         ${ONETBB_LIB_NAME}
         ${FMT_LIB_NAME}
+        ${ASYNCPLUSPLUS_LIB_NAME}
+        ${KCP_LIB_NAME}
+        ${YASIO_LIB_NAME}
 
         )
 target_link_libraries(${TARGET_NAME} ${LIBS})
@@ -52,6 +58,9 @@ SET(INCLUDES
         ${BOOST_ASIO_LIB_INCLUDE}
         ${ONETBB_LIB_INCLUDE}
         ${FMT_LIB_INCLUDE}
+        ${ASYNCPLUSPLUS_LIB_INCLUDE}
+        ${KCP_LIB_INCLUDE}
+        ${YASIO_LIB_INCLUDE}
 
         )
 target_include_directories(${TARGET_NAME}

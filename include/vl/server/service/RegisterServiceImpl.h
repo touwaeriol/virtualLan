@@ -27,6 +27,8 @@ namespace vl::server {
 
         RegisterServiceImpl(std::string ipStart, std::string ipEnd, int netmask);
 
+        RegisterServiceImpl(std::shared_ptr<EthernetAddressManager> _manager, int netmask);
+
         ~RegisterServiceImpl() override;
 
         grpc::Status registe(::grpc::ServerContext *context, const ::vl::core::RegisterRequest *request,
@@ -34,7 +36,7 @@ namespace vl::server {
 
     private:
 
-        EthernetAddressManager _manager;
+        std::shared_ptr<EthernetAddressManager> _manager;
 
         uint32_t _netmask;
 

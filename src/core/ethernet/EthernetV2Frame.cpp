@@ -3,7 +3,7 @@
 //
 
 #include <netinet/in.h>
-#include "network/EthernetV2Frame.h"
+#include "etnernet/EthernetV2Frame.h"
 
 using namespace std;
 

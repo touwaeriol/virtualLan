@@ -36,7 +36,7 @@ GTEST_API_ int main(int argc, char **argv) {
     auto range = vl::core::split(FLAGS_ipRange, "-");
     auto ipRange = pair<string, string>(range[0], range[1]);
     auto netmask = FLAGS_netmask;
-    vl::server::Server server{listenHost, listenPort, ipRange, netmask};
+    vl::server::Server server(listenHost, listenPort, ipRange, netmask);
 
 
     server.init();
